@@ -525,6 +525,229 @@ long long ReadWordIndex(FILE *fin) {
     return index;
 }
 
+void TrainModel() {
+    long long a;
+    long long b;
+    long long d;
+    long long word;
+    long long last_word;
+    long long sentence_length;
+    long long sentence_position;
+    long long word_count;
+    long long last_word_count;
+    long long l1;
+    long long c;
+    long long target;
+    long long label;
+    long long diff_count;
+    long long sen[MAX_SENTENCE_LENGTH + 1];
+    long long input_offset;
+    
+    unsigned long long next_random;
+    
+    float f;
+    float g;
+    float ran;
+    float prob_ratio;
+    float *neu1;
+    float progress;
+    float new_neu1;
+    float new_syn0;
+    
+    FILE *fi;
+    FILE *fo;
+    
+    next_random = 1;
+    sentence_length = 0;
+    sentence_position = 0;
+    word_count = 0;
+    last_word_count = 0;
+    
+    fi = fopen("input.txt", "rb");
+    if (fi == NULL) {
+        printf("Error opening input.txt for training\n");
+        exit(1);
+    }
+    
+    neu1 = (float *)calloc(layer1_size, sizeof(float));
+    if (neu1 == NULL) {
+        printf("Memory allocation failed for neu1\n");
+        exit(1);
+    }
+
+    printf("Pass 2: Training Neural Network...\n");
+    
+    while (1) {
+        diff_count = word_count - last_word_count;
+        
+        if (diff_count > 10000) {
+            word_count_actual = word_count_actual + diff_count;
+            last_word_count = word_count;
+            
+            progress = word_count_actual / (float)(train_words + 1) * 100;
+            
+            printf("Alpha: %f  Progress: %.2f%% \r", alpha, progress);
+            fflush(stdout);
+            
+            alpha = 0.025 * (1 - word_count_actual / (float)(train_words + 1));
+            
+            if (alpha < 0.0001) {
+                alpha = 0.0001;
+            }
+        }
+        
+        if (sentence_length == 0) {
+            while (1) {
+                word = ReadWordIndex(fi);
+                
+                if (feof(fi)) {
+                    break;
+                }
+                
+                if (word == -1) {
+                    continue;
+                }
+                
+                if (word == 0) {
+                    break;
+                }
+                
+                if (sample > 0) {
+                    prob_ratio = sample * train_words;
+                    ran = (sqrt(vocab[word].cn / prob_ratio) + 1) * prob_ratio / vocab[word].cn;
+                    
+                    next_random = next_random * 25214903917 + 11;
+                    
+                    if (ran < (next_random & 0xFFFF) / 65536.f) {
+                        continue;
+                    }
+                }
+                
+                sen[sentence_length] = word;
+                sentence_length++;
+                
+                if (sentence_length >= MAX_SENTENCE_LENGTH) {
+                    break;
+                }
+            }
+            sentence_position = 0;
+        }
+        
+        if (feof(fi)) {
+            if (sentence_length == 0) {
+                break;
+            }
+        }
+        
+        word = sen[sentence_position];
+        
+        if (word == -1) {
+            continue;
+        }
+        
+        c = 0;
+        while (c < layer1_size) {
+            neu1[c] = 0;
+            c++;
+        }
+        
+        next_random = next_random * 25214903917 + 11;
+        b = next_random % window;
+        
+        a = b;
+        while (a < window * 2 + 1 - b) {
+            if (a == window) {
+                a++;
+                continue;
+            }
+            
+            c = sentence_position - window + a;
+            
+            if (c < 0) {
+                a++;
+                continue;
+            }
+            
+            if (c >= sentence_length) {
+                a++;
+                continue;
+            }
+            
+            last_word = sen[c];
+            l1 = last_word * layer1_size;
+            
+            d = 0;
+            while (d < negative + 1) {
+                if (d == 0) {
+                    target = word;
+                    label = 1;
+                } else {
+                    next_random = next_random * 25214903917 + 11;
+                    target = table[(next_random >> 16) % (int)TABLE_SIZE];
+                    
+                    if (target == 0) {
+                        target = next_random % (vocab_size - 1) + 1;
+                    }
+                    
+                    if (target == word) {
+                        d++;
+                        continue;
+                    }
+                    label = 0;
+                }
+                
+                RunGradientDescent(last_word, target, label, alpha, neu1);
+                d++;
+            }
+            
+            c = 0;
+            while (c < layer1_size) {
+                input_offset = l1 + c;
+                new_syn0 = syn0[input_offset] + neu1[c];
+                syn0[input_offset] = new_syn0;
+                c++;
+            }
+            a++;
+        }
+        
+        sentence_position++;
+        word_count++;
+        
+        if (sentence_position >= sentence_length) {
+            sentence_length = 0;
+            continue;
+        }
+    }
+    
+    fclose(fi);
+    free(neu1);
+    
+    printf("\nTraining complete. Saving vectors to vectors.txt...\n");
+    fo = fopen("vectors.txt", "wb");
+    if (fo == NULL) {
+        printf("Error creating vectors.txt\n");
+        exit(1);
+    }
+    
+    fprintf(fo, "%lld %lld\n", vocab_size, layer1_size);
+    
+    a = 0;
+    while (a < vocab_size) {
+        fprintf(fo, "%s ", vocab[a].word);
+        
+        b = 0;
+        while (b < layer1_size) {
+            fprintf(fo, "%lf ", syn0[a * layer1_size + b]);
+            b++;
+        }
+        fprintf(fo, "\n");
+        a++;
+    }
+    
+    fclose(fo);
+}
+
+
 //my main function(assumed)
 int main() {
     int mode;
