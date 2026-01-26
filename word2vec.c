@@ -747,7 +747,7 @@ void TrainModel() {
     fclose(fo);
 }
 
-
+//training model loop
 void LoadModel() {
     long long words;
     long long size;
