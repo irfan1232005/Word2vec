@@ -748,6 +748,89 @@ void TrainModel() {
 }
 
 
+void LoadModel() {
+    long long words;
+    long long size;
+    long long a;
+    long long b;
+    long long vocab_bytes;
+    long long syn0_bytes;
+    long long vocab_hash_bytes;
+    float len;
+    float val;
+    float sq_sum;
+    float normalized;
+    char word[MAX_STRING];
+    unsigned int hash;
+    
+    FILE *f;
+    f = fopen("vectors.txt", "rb");
+    
+    if (f == NULL) {
+        printf("Error: vectors.txt not found. Train first!\n");
+        exit(1);
+    }
+    
+    fscanf(f, "%lld", &words);
+    fscanf(f, "%lld", &size);
+    
+    vocab_size = words;
+    layer1_size = size;
+    
+    printf("Loading Model: %lld words, %lld dimensions\n", words, size);
+    
+    vocab_bytes = words * sizeof(struct vocab_word);
+    vocab = (struct vocab_word *)malloc(vocab_bytes);
+    
+    vocab_hash_bytes = vocab_hash_size * sizeof(int);
+    vocab_hash = (int *)malloc(vocab_hash_bytes);
+    
+    a = 0;
+    while (a < vocab_hash_size) {
+        vocab_hash[a] = -1;
+        a++;
+    }
+    
+    syn0_bytes = words * size * sizeof(float);
+    syn0 = (float *)malloc(syn0_bytes);
+    
+    b = 0;
+    while (b < words) {
+        a = 0;
+        fscanf(f, "%s", word);
+        
+        vocab[b].word = (char *)calloc(strlen(word) + 1, sizeof(char));
+        strcpy(vocab[b].word, word);
+        
+        hash = GetWordHash(vocab[b].word);
+        while (vocab_hash[hash] != -1) {
+            hash = (hash + 1) % vocab_hash_size;
+        }
+        vocab_hash[hash] = b;
+        
+        sq_sum = 0;
+        a = 0;
+        while (a < size) {
+            fscanf(f, "%f", &val);
+            syn0[b * size + a] = val;
+            sq_sum = sq_sum + (val * val);
+            a++;
+        }
+        
+        len = sqrt(sq_sum);
+        
+        a = 0;
+        while (a < size) {
+            normalized = syn0[b * size + a] / len;
+            syn0[b * size + a] = normalized;
+            a++;
+        }
+        b++;
+    }
+    fclose(f);
+}
+
+
 //my main function(assumed)
 int main() {
     int mode;
