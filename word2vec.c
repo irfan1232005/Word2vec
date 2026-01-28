@@ -18,7 +18,8 @@ int negative = 5;
 float alpha = 0.025;
 float sample = 1e-3;
 
-struct vocab_word {
+struct vocab_word 
+{
     long long cn;
     char *word;
 };
@@ -37,7 +38,8 @@ long long train_words = 0;
 long long word_count_actual = 0;
 long long min_reduce = 1;
 
-void InitExpTable() {
+void InitExpTable()
+{
     int i;
     float f;
     float numerator;
@@ -51,7 +53,8 @@ void InitExpTable() {
     }
 
     i = 0;
-    while (i < EXP_TABLE_SIZE) {
+    while (i < EXP_TABLE_SIZE) 
+    {
         exponent_val = (i / (float)EXP_TABLE_SIZE * 2 - 1) * MAX_EXP;
         f = exp(exponent_val);
         numerator = f;
@@ -61,15 +64,18 @@ void InitExpTable() {
     }
 }
 
-static inline float GetSigmoid(float f) {
+static inline float GetSigmoid(float f)
+{
     float result;
     int index;
     float formula_val;
 
-    if (f > MAX_EXP) {
+    if (f > MAX_EXP)
+    {
         return 1.0f;
     }
-    if (f < -MAX_EXP) {
+    if (f < -MAX_EXP) 
+    {
         return 0.0f;
     }
     
@@ -80,7 +86,8 @@ static inline float GetSigmoid(float f) {
     return result;
 }
 
-static inline void RunGradientDescent(long long input_idx, long long target_idx, int label, float alpha, float *neu1_error) {
+static inline void RunGradientDescent(long long input_idx, long long target_idx, int label, float alpha, float *neu1_error) 
+{
     long long l1;
     long long l2;
     float f;
@@ -95,7 +102,8 @@ static inline void RunGradientDescent(long long input_idx, long long target_idx,
     f = 0;
     
     c = 0;
-    while (c < layer1_size) {
+    while (c < layer1_size)
+        {
         product = syn0[l1 + c] * syn1neg[l2 + c];
         f = f + product;
         c++;
@@ -107,48 +115,59 @@ static inline void RunGradientDescent(long long input_idx, long long target_idx,
     g = diff * alpha;
 
     c = 0;
-    while (c < layer1_size) {
+    while (c < layer1_size) 
+    {
         product = g * syn1neg[l2 + c];
         neu1_error[c] = neu1_error[c] + product;
         c++;
     }
 
     c = 0;
-    while (c < layer1_size) {
+    while (c < layer1_size) 
+    {
         product = g * syn0[l1 + c];
         syn1neg[l2 + c] = syn1neg[l2 + c] + product;
         c++;
     }
 }
 
-void ReadWord(char *word, FILE *fin) {
+void ReadWord(char *word, FILE *fin) 
+{
     int a;
     int ch;
     
     a = 0;
-    while (!feof(fin)) {
+    while (!feof(fin))
+        {
         ch = fgetc(fin);
         
-        if (ch == 13) {
+        if (ch == 13) 
+        {
             continue;
         }
 
-        if (ch == ' ') {
-            if (a > 0) {
+        if (ch == ' ')
+        {
+            if (a > 0) 
+            {
                 break;
             }
             continue;
         }
         
-        if (ch == '\t') {
-            if (a > 0) {
+        if (ch == '\t') 
+        {
+            if (a > 0) 
+            {
                 break;
             }
             continue;
         }
         
-        if (ch == '\n') {
-            if (a > 0) {
+        if (ch == '\n') 
+        {
+            if (a > 0) 
+            {
                 ungetc(ch, fin);
                 break;
             }
@@ -159,7 +178,8 @@ void ReadWord(char *word, FILE *fin) {
         word[a] = ch;
         a++;
         
-        if (a >= MAX_STRING - 1) {
+        if (a >= MAX_STRING - 1) 
+        {
             a--;
         }
     }
@@ -175,7 +195,8 @@ int GetWordHash(char *word) {
     len = strlen(word);
     
     a = 0;
-    while (a < len) {
+    while (a < len) 
+    {
         hash = hash * 257 + word[a];
         a++;
     }
@@ -184,20 +205,24 @@ int GetWordHash(char *word) {
     return hash;
 }
 
-int SearchVocab(char *word) {
+int SearchVocab(char *word) 
+{
     unsigned int hash;
     int index;
     
     hash = GetWordHash(word);
     
-    while (1) {
+    while (1) 
+    {
         index = vocab_hash[hash];
         
-        if (index == -1) {
+        if (index == -1) 
+        {
             return -1;
         }
         
-        if (!strcmp(word, vocab[index].word)) {
+        if (!strcmp(word, vocab[index].word)) 
+        {
             return index;
         }
         
@@ -206,7 +231,8 @@ int SearchVocab(char *word) {
     return -1;
 }
 
-int AddWordToVocab(char *word) {
+int AddWordToVocab(char *word) 
+{
     unsigned int hash;
     int length;
     long long new_size;
@@ -214,12 +240,14 @@ int AddWordToVocab(char *word) {
     hash = GetWordHash(word);
     length = strlen(word) + 1;
     
-    if (length > MAX_STRING) {
+    if (length > MAX_STRING)
+    {
         length = MAX_STRING;
     }
     
     vocab[vocab_size].word = (char *)calloc(length, sizeof(char));
-    if (vocab[vocab_size].word == NULL) {
+    if (vocab[vocab_size].word == NULL) 
+    {
         printf("Memory allocation failed for word string\n");
         exit(1);
     }
@@ -228,17 +256,20 @@ int AddWordToVocab(char *word) {
     vocab[vocab_size].cn = 0;
     vocab_size++;
     
-    if (vocab_size + 2 >= vocab_max_size) {
+    if (vocab_size + 2 >= vocab_max_size) 
+    {
         vocab_max_size = vocab_max_size + 1000;
         new_size = vocab_max_size * sizeof(struct vocab_word);
         vocab = (struct vocab_word *)realloc(vocab, new_size);
-        if (vocab == NULL) {
+        if (vocab == NULL) 
+        {
             printf("Memory allocation failed for vocab resize\n");
             exit(1);
         }
     }
     
-    while (vocab_hash[hash] != -1) {
+    while (vocab_hash[hash] != -1) 
+    {
         hash = (hash + 1) % vocab_hash_size;
     }
     
@@ -247,7 +278,8 @@ int AddWordToVocab(char *word) {
     return vocab_size - 1;
 }
 
-int VocabCompare(const void *a, const void *b) {
+int VocabCompare(const void *a, const void *b) 
+{
     long long count_a;
     long long count_b;
     struct vocab_word *word_a;
@@ -262,7 +294,8 @@ int VocabCompare(const void *a, const void *b) {
     return count_b - count_a;
 }
 
-void SortVocab() {
+void SortVocab() 
+{
     int i;
     int a;
     unsigned int hash;
@@ -270,12 +303,14 @@ void SortVocab() {
     long long remaining_words;
     
     remaining_words = vocab_size - 1;
-    if (remaining_words > 0) {
+    if (remaining_words > 0) 
+    {
         qsort(&vocab[1], remaining_words, sizeof(struct vocab_word), VocabCompare);
     }
     
     i = 0;
-    while (i < vocab_hash_size) {
+    while (i < vocab_hash_size)
+        {
         vocab_hash[i] = -1;
         i++;
     }
@@ -284,11 +319,14 @@ void SortVocab() {
     train_words = 0;
     
     a = 0;
-    while (a < size) {
+    while (a < size) 
+    {
         if ((vocab[a].cn < min_count) && (a != 0)) {
             vocab_size--;
             free(vocab[a].word);
-        } else {
+        } 
+        else 
+        {
             hash = GetWordHash(vocab[a].word);
             
             while (vocab_hash[hash] != -1) {
@@ -302,13 +340,15 @@ void SortVocab() {
     }
     
     vocab = (struct vocab_word *)realloc(vocab, (vocab_size + 1) * sizeof(struct vocab_word));
-    if (vocab == NULL) {
+    if (vocab == NULL) 
+    {
         printf("Memory re-allocation failed after sorting\n");
         exit(1);
     }
 }
 
-void ReduceVocab() {
+void ReduceVocab() 
+{
     int a;
     int b;
     unsigned int hash;
@@ -317,12 +357,15 @@ void ReduceVocab() {
     b = 0;
     a = 0;
     
-    while (a < vocab_size) {
+    while (a < vocab_size)
+        {
         if (vocab[a].cn > min_reduce) {
             vocab[b].cn = vocab[a].cn;
             vocab[b].word = vocab[a].word;
             b++;
-        } else {
+        }
+        else 
+        {
             free(vocab[a].word);
         }
         a++;
@@ -331,16 +374,19 @@ void ReduceVocab() {
     vocab_size = b;
     
     i = 0;
-    while (i < vocab_hash_size) {
+    while (i < vocab_hash_size) 
+    {
         vocab_hash[i] = -1;
         i++;
     }
     
     a = 0;
-    while (a < vocab_size) {
+    while (a < vocab_size)
+        {
         hash = GetWordHash(vocab[a].word);
         
-        while (vocab_hash[hash] != -1) {
+        while (vocab_hash[hash] != -1)
+            {
             hash = (hash + 1) % vocab_hash_size;
         }
         
@@ -351,7 +397,8 @@ void ReduceVocab() {
     min_reduce++;
 }
 
-void LearnVocabFromTrainFile() {
+void LearnVocabFromTrainFile() 
+{
     char word[MAX_STRING];
     FILE *fin;
     long long a;
@@ -361,13 +408,15 @@ void LearnVocabFromTrainFile() {
     long long threshold;
     
     a = 0;
-    while (a < vocab_hash_size) {
+    while (a < vocab_hash_size) 
+    {
         vocab_hash[a] = -1;
         a++;
     }
     
     fin = fopen("input.txt", "rb");
-    if (fin == NULL) {
+    if (fin == NULL) 
+    {
         printf("ERROR: input.txt not found!\n");
         exit(1);
     }
@@ -377,31 +426,38 @@ void LearnVocabFromTrainFile() {
     
     printf("Pass 1: Reading file to build Vocabulary...\n");
     
-    while (1) {
+    while (1) 
+    {
         ReadWord(word, fin);
         
-        if (feof(fin)) {
+        if (feof(fin))
+        {
             break;
         }
         
         train_words++;
         
-        if ((train_words % 100000) == 0) {
+        if ((train_words % 100000) == 0) 
+        {
             printf("%lldK%c", train_words / 1000, 13);
             fflush(stdout);
         }
         
         index = SearchVocab(word);
         
-        if (index == -1) {
+        if (index == -1) 
+        {
             new_index = AddWordToVocab(word);
             vocab[new_index].cn = 1;
-        } else {
+        } 
+        else 
+        {
             vocab[index].cn++;
         }
         
         threshold = vocab_hash_size * 0.7;
-        if (vocab_size > threshold) {
+        if (vocab_size > threshold) 
+        {
             ReduceVocab();
         }
     }
@@ -413,8 +469,9 @@ void LearnVocabFromTrainFile() {
     
     fclose(fin);
 }
-
-void InitNet() {
+//artificial neural network
+void InitNet() 
+{
     long long a;
     long long b;
     unsigned long long next_random;
@@ -427,22 +484,26 @@ void InitNet() {
     
     syn0_size = vocab_size * layer1_size * sizeof(float);
     syn0 = (float *)malloc(syn0_size);
-    if (syn0 == NULL) {
+    if (syn0 == NULL) 
+    {
         printf("Memory allocation failed for syn0\n");
         exit(1);
     }
     
     syn1_size = vocab_size * layer1_size * sizeof(float);
     syn1neg = (float *)malloc(syn1_size);
-    if (syn1neg == NULL) {
+    if (syn1neg == NULL) 
+    {
         printf("Memory allocation failed for syn1neg\n");
         exit(1);
     }
     
     a = 0;
-    while (a < vocab_size) {
+    while (a < vocab_size) 
+    {
         b = 0;
-        while (b < layer1_size) {
+        while (b < layer1_size)
+            {
             next_random = next_random * 25214903917 + 11;
             random_val = (next_random & 0xFFFF) / (float)65536;
             normalized_val = (random_val - 0.5) / layer1_size;
@@ -453,7 +514,8 @@ void InitNet() {
     }
     
     a = 0;
-    while (a < vocab_size) {
+    while (a < vocab_size) 
+    {
         b = 0;
         while (b < layer1_size) {
             syn1neg[a * layer1_size + b] = 0;
@@ -463,7 +525,8 @@ void InitNet() {
     }
 }
 
-void InitUnigramTable() {
+void InitUnigramTable() 
+{
     long long a;
     long long i;
     double train_words_pow;
@@ -476,13 +539,15 @@ void InitUnigramTable() {
     train_words_pow = 0;
     
     table = (int *)malloc(TABLE_SIZE * sizeof(int));
-    if (table == NULL) {
+    if (table == NULL) 
+    {
         printf("Memory allocation failed for Unigram Table\n");
         exit(1);
     }
     
     a = 0;
-    while (a < vocab_size) {
+    while (a < vocab_size)
+        {
         word_pow = pow(vocab[a].cn, power);
         train_words_pow = train_words_pow + word_pow;
         a++;
@@ -492,18 +557,21 @@ void InitUnigramTable() {
     d1 = pow(vocab[i].cn, power) / train_words_pow;
     
     a = 0;
-    while (a < TABLE_SIZE) {
+    while (a < TABLE_SIZE) 
+    {
         table[a] = i;
         
         ratio = a / (double)TABLE_SIZE;
         
-        if (ratio > d1) {
+        if (ratio > d1)
+        {
             i++;
             word_pow = pow(vocab[i].cn, power);
             d1 = d1 + (word_pow / train_words_pow);
         }
         
-        if (i >= vocab_size) {
+        if (i >= vocab_size) 
+        {
             i = vocab_size - 1;
         }
         
@@ -511,7 +579,8 @@ void InitUnigramTable() {
     }
 }
 
-long long ReadWordIndex(FILE *fin) {
+long long ReadWordIndex(FILE *fin) 
+{
     char word[MAX_STRING];
     int index;
     
@@ -525,7 +594,8 @@ long long ReadWordIndex(FILE *fin) {
     return index;
 }
 
-void TrainModel() {
+void TrainModel() 
+{
     long long a;
     long long b;
     long long d;
@@ -564,23 +634,27 @@ void TrainModel() {
     last_word_count = 0;
     
     fi = fopen("input.txt", "rb");
-    if (fi == NULL) {
+    if (fi == NULL) 
+    {
         printf("Error opening input.txt for training\n");
         exit(1);
     }
     
     neu1 = (float *)calloc(layer1_size, sizeof(float));
-    if (neu1 == NULL) {
+    if (neu1 == NULL) 
+    {
         printf("Memory allocation failed for neu1\n");
         exit(1);
     }
 
     printf("Pass 2: Training Neural Network...\n");
     
-    while (1) {
+    while (1) 
+    {
         diff_count = word_count - last_word_count;
         
-        if (diff_count > 10000) {
+        if (diff_count > 10000) 
+        {
             word_count_actual = word_count_actual + diff_count;
             last_word_count = word_count;
             
@@ -591,34 +665,42 @@ void TrainModel() {
             
             alpha = 0.025 * (1 - word_count_actual / (float)(train_words + 1));
             
-            if (alpha < 0.0001) {
+            if (alpha < 0.0001)
+            {
                 alpha = 0.0001;
             }
         }
         
-        if (sentence_length == 0) {
-            while (1) {
+        if (sentence_length == 0) 
+        {
+            while (1)
+                {
                 word = ReadWordIndex(fi);
                 
-                if (feof(fi)) {
+                if (feof(fi)) 
+                {
                     break;
                 }
                 
-                if (word == -1) {
+                if (word == -1) 
+                {
                     continue;
                 }
                 
-                if (word == 0) {
+                if (word == 0)
+                {
                     break;
                 }
                 
-                if (sample > 0) {
+                if (sample > 0)
+                {
                     prob_ratio = sample * train_words;
                     ran = (sqrt(vocab[word].cn / prob_ratio) + 1) * prob_ratio / vocab[word].cn;
                     
                     next_random = next_random * 25214903917 + 11;
                     
-                    if (ran < (next_random & 0xFFFF) / 65536.f) {
+                    if (ran < (next_random & 0xFFFF) / 65536.f) 
+                    {
                         continue;
                     }
                 }
@@ -626,14 +708,16 @@ void TrainModel() {
                 sen[sentence_length] = word;
                 sentence_length++;
                 
-                if (sentence_length >= MAX_SENTENCE_LENGTH) {
+                if (sentence_length >= MAX_SENTENCE_LENGTH)
+                {
                     break;
                 }
             }
             sentence_position = 0;
         }
         
-        if (feof(fi)) {
+        if (feof(fi)) 
+        {
             if (sentence_length == 0) {
                 break;
             }
@@ -641,12 +725,14 @@ void TrainModel() {
         
         word = sen[sentence_position];
         
-        if (word == -1) {
+        if (word == -1) 
+        {
             continue;
         }
         
         c = 0;
-        while (c < layer1_size) {
+        while (c < layer1_size) 
+        {
             neu1[c] = 0;
             c++;
         }
@@ -655,20 +741,24 @@ void TrainModel() {
         b = next_random % window;
         
         a = b;
-        while (a < window * 2 + 1 - b) {
-            if (a == window) {
+        while (a < window * 2 + 1 - b) 
+        {
+            if (a == window) 
+            {
                 a++;
                 continue;
             }
             
             c = sentence_position - window + a;
             
-            if (c < 0) {
+            if (c < 0) 
+            {
                 a++;
                 continue;
             }
             
-            if (c >= sentence_length) {
+            if (c >= sentence_length)
+            {
                 a++;
                 continue;
             }
@@ -677,19 +767,24 @@ void TrainModel() {
             l1 = last_word * layer1_size;
             
             d = 0;
-            while (d < negative + 1) {
+            while (d < negative + 1) 
+            {
                 if (d == 0) {
                     target = word;
                     label = 1;
-                } else {
+                } 
+                else
+                    {
                     next_random = next_random * 25214903917 + 11;
                     target = table[(next_random >> 16) % (int)TABLE_SIZE];
                     
-                    if (target == 0) {
+                    if (target == 0) 
+                    {
                         target = next_random % (vocab_size - 1) + 1;
                     }
                     
-                    if (target == word) {
+                    if (target == word) 
+                       {
                         d++;
                         continue;
                     }
@@ -713,7 +808,8 @@ void TrainModel() {
         sentence_position++;
         word_count++;
         
-        if (sentence_position >= sentence_length) {
+        if (sentence_position >= sentence_length)
+        {
             sentence_length = 0;
             continue;
         }
@@ -724,7 +820,8 @@ void TrainModel() {
     
     printf("\nTraining complete. Saving vectors to vectors.txt...\n");
     fo = fopen("vectors.txt", "wb");
-    if (fo == NULL) {
+    if (fo == NULL)
+    {
         printf("Error creating vectors.txt\n");
         exit(1);
     }
@@ -732,11 +829,13 @@ void TrainModel() {
     fprintf(fo, "%lld %lld\n", vocab_size, layer1_size);
     
     a = 0;
-    while (a < vocab_size) {
+    while (a < vocab_size) 
+    {
         fprintf(fo, "%s ", vocab[a].word);
         
         b = 0;
-        while (b < layer1_size) {
+        while (b < layer1_size)
+            {
             fprintf(fo, "%lf ", syn0[a * layer1_size + b]);
             b++;
         }
@@ -748,7 +847,8 @@ void TrainModel() {
 }
 
 //training model loop
-void LoadModel() {
+void LoadModel() 
+{
     long long words;
     long long size;
     long long a;
@@ -766,7 +866,8 @@ void LoadModel() {
     FILE *f;
     f = fopen("vectors.txt", "rb");
     
-    if (f == NULL) {
+    if (f == NULL) 
+    {
         printf("Error: vectors.txt not found. Train first!\n");
         exit(1);
     }
@@ -786,7 +887,8 @@ void LoadModel() {
     vocab_hash = (int *)malloc(vocab_hash_bytes);
     
     a = 0;
-    while (a < vocab_hash_size) {
+    while (a < vocab_hash_size)
+        {
         vocab_hash[a] = -1;
         a++;
     }
@@ -795,7 +897,8 @@ void LoadModel() {
     syn0 = (float *)malloc(syn0_bytes);
     
     b = 0;
-    while (b < words) {
+    while (b < words) 
+    {
         a = 0;
         fscanf(f, "%s", word);
         
@@ -810,7 +913,8 @@ void LoadModel() {
         
         sq_sum = 0;
         a = 0;
-        while (a < size) {
+        while (a < size) 
+        {
             fscanf(f, "%f", &val);
             syn0[b * size + a] = val;
             sq_sum = sq_sum + (val * val);
@@ -820,7 +924,8 @@ void LoadModel() {
         len = sqrt(sq_sum);
         
         a = 0;
-        while (a < size) {
+        while (a < size)
+            {
             normalized = syn0[b * size + a] / len;
             syn0[b * size + a] = normalized;
             a++;
@@ -832,7 +937,8 @@ void LoadModel() {
 
 
 //my main function(assumed)
-int main() {
+int main() 
+{
     int mode;
     size_t vocab_init_bytes;
     size_t hash_init_bytes;
@@ -851,10 +957,12 @@ int main() {
     
     scanf("%d", &mode);
 
-    if (mode == 1) {
+    if (mode == 1)
+    {
         vocab_init_bytes = vocab_max_size * sizeof(struct vocab_word);
         vocab = (struct vocab_word *)calloc(1, vocab_init_bytes);
-        if (vocab == NULL) {
+        if (vocab == NULL)
+        {
             printf("Initial vocab allocation failed\n");
             printf("\n");
             exit(1);
@@ -862,7 +970,8 @@ int main() {
         
         hash_init_bytes = vocab_hash_size * sizeof(int);
         vocab_hash = (int *)calloc(1, hash_init_bytes);
-        if (vocab_hash == NULL) {
+        if (vocab_hash == NULL) 
+        {
             printf("Initial hash allocation failed\n");
             exit(1);
         }
@@ -874,7 +983,8 @@ int main() {
         TrainModel();
     } 
     
-    if (mode == 2) {
+    if (mode == 2) 
+    {
         LoadModel();
         InteractiveLoop();
     }
