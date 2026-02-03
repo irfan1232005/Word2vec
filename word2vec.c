@@ -936,6 +936,211 @@ void LoadModel()
 }
 
 
+
+void InteractiveLoop() {
+    long long a;
+    long long b;
+    long long c;
+    long long d;
+    long long w1;
+    long long w2;
+    long long w3;
+    long long bi[40];
+    long long current_index;
+    
+    float dist;
+    float len;
+    float bestd[40];
+    float vec[300];
+    float dot_prod;
+    float current_dist;
+    
+    char st1[MAX_STRING];
+    char st2[MAX_STRING];
+    char st3[MAX_STRING];
+    int choice;
+    
+    while (1) {
+        printf("\n");
+        printf("==============================================\n");
+        printf("Choose Option:\n");
+        printf("1. Similar Words (Input: 'good')\n");
+        printf("2. Linear Analogy (Input: 'king man woman')\n");
+        printf("3. Exit\n");
+        printf("Enter choice: ");
+        
+        scanf("%d", &choice);
+        
+        if (choice == 3) {
+            break;
+        }
+        
+        if (choice == 1) {
+            printf("\nEnter word: ");
+            scanf("%s", st1);
+            
+            b = SearchVocab(st1);
+            
+            if (b == -1) {
+                printf("Out of dictionary word!\n");
+                continue;
+            }
+            
+            a = 0;
+            while (a < 20) {
+                bestd[a] = 0;
+                bi[a] = 0;
+                a++;
+            }
+            
+            printf("\n");
+            printf("                                              Word       Cosine Distance\n");
+            printf("------------------------------------------------------------------------\n");
+            
+            c = 0;
+            while (c < vocab_size) {
+                if (c == b) {
+                    c++;
+                    continue;
+                }
+                
+                dist = 0;
+                a = 0;
+                while (a < layer1_size) {
+                    dot_prod = syn0[a + b * layer1_size] * syn0[a + c * layer1_size];
+                    dist = dist + dot_prod;
+                    a++;
+                }
+                
+                a = 0;
+                while (a < 20) {
+                    if (dist > bestd[a]) {
+                        d = 19;
+                        while (d > a) {
+                            bestd[d] = bestd[d - 1];
+                            bi[d] = bi[d - 1];
+                            d--;
+                        }
+                        bestd[a] = dist;
+                        bi[a] = c;
+                        break;
+                    }
+                    a++;
+                }
+                c++;
+            }
+            
+            a = 0;
+            while (a < 15) {
+                ￼ Star
+                
+                current_index = bi[a];
+                current_dist = bestd[a];
+                printf("%50s\t\t%f\n", vocab[current_index].word, current_dist);
+                a++;
+            }
+        }
+        
+        if (choice == 2) {
+            printf("\nEnter 3 words (A B C) for formula A - B + C = ?\n");
+            printf("Example: king man woman\n");
+            printf("Input: ");
+            
+            scanf("%s %s %s", st1, st2, st3);
+            
+            w1 = SearchVocab(st1);
+            w2 = SearchVocab(st2);
+            w3 = SearchVocab(st3);
+            
+            if (w1 == -1) {
+                printf("Word 1 is out of dictionary!\n");
+                continue;
+            }
+            if (w2 == -1) {
+                printf("Word 2 is out of dictionary!\n");
+                continue;
+            }
+            if (w3 == -1) {
+                printf("Word 3 is out of dictionary!\n");
+                continue;
+            }
+            
+            a = 0;
+            while (a < layer1_size) {
+                vec[a] = syn0[a + w1*layer1_size] - syn0[a + w2*layer1_size] + syn0[a + w3*layer1_size];
+                a++;
+            }
+            
+            len = 0;
+            a = 0;
+            while (a < layer1_size) {
+                len = len + (vec[a] * vec[a]);
+                a++;
+            }
+            
+            len = sqrt(len);
+            
+            a = 0;
+            while (a < layer1_size) {
+                vec[a] = vec[a] / len;
+                a++;
+            }
+            
+            a = 0;
+            while (a < 20) {
+                bestd[a] = 0;
+                bi[a] = 0;
+                a++;
+            }
+            
+            printf("\n");
+            printf("                                              Word       Cosine Distance\n");
+            printf("------------------------------------------------------------------------\n");
+            
+            c = 0;
+            while (c < vocab_size) {
+                if (c == w1) { c++; continue; }
+                if (c == w2) { c++; continue; }
+                if (c == w3) { c++; continue; }
+                
+                dist = 0;
+                a = 0;
+                while (a < layer1_size) {
+                    dot_prod = vec[a] * syn0[a + c * layer1_size];
+                    dist = dist + dot_prod;
+                    a++;
+                }
+                
+                a = 0;
+                while (a < 20) {
+                    if (dist > bestd[a]) {
+                        d = 19;
+                        while (d > a) {
+                            bestd[d] = bestd[d - 1];
+                            bi[d] = bi[d - 1];
+                            d--;
+                        }
+                        bestd[a] = dist;
+                        bi[a] = c;
+                        break;
+                    }
+                    a++;
+                }
+                c++;
+            }
+            
+            a = 0;
+            while (a < 15) {
+                current_index = bi[a];
+                current_dist = bestd[a];
+                printf("%50s\t\t%f\n", vocab[current_index].word, current_dist);
+                a++;
+            }
+        }
+    }
+}
+
+
 //my main function(assumed)
 int main() 
 {
