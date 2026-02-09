@@ -937,7 +937,8 @@ void LoadModel()
 
 
 
-void InteractiveLoop() {
+void InteractiveLoop()
+{
     long long a;
     long long b;
     long long c;
@@ -960,7 +961,8 @@ void InteractiveLoop() {
     char st3[MAX_STRING];
     int choice;
     
-    while (1) {
+    while (1)
+        {
         printf("\n");
         printf("==============================================\n");
         printf("Choose Option:\n");
@@ -971,11 +973,13 @@ void InteractiveLoop() {
         
         scanf("%d", &choice);
         
-        if (choice == 3) {
+        if (choice == 3) 
+        {
             break;
         }
         
-        if (choice == 1) {
+        if (choice == 1) 
+        {
             printf("\nEnter word: ");
             scanf("%s", st1);
             
@@ -987,7 +991,8 @@ void InteractiveLoop() {
             }
             
             a = 0;
-            while (a < 20) {
+            while (a < 20) 
+            {
                 bestd[a] = 0;
                 bi[a] = 0;
                 a++;
@@ -998,7 +1003,8 @@ void InteractiveLoop() {
             printf("------------------------------------------------------------------------\n");
             
             c = 0;
-            while (c < vocab_size) {
+            while (c < vocab_size)
+                {
                 if (c == b) {
                     c++;
                     continue;
@@ -1006,17 +1012,21 @@ void InteractiveLoop() {
                 
                 dist = 0;
                 a = 0;
-                while (a < layer1_size) {
+                while (a < layer1_size)
+                    {
                     dot_prod = syn0[a + b * layer1_size] * syn0[a + c * layer1_size];
                     dist = dist + dot_prod;
                     a++;
                 }
                 
                 a = 0;
-                while (a < 20) {
-                    if (dist > bestd[a]) {
+                while (a < 20)
+                    {
+                    if (dist > bestd[a]) 
+                    {
                         d = 19;
-                        while (d > a) {
+                        while (d > a) 
+                        {
                             bestd[d] = bestd[d - 1];
                             bi[d] = bi[d - 1];
                             d--;
@@ -1031,17 +1041,17 @@ void InteractiveLoop() {
             }
             
             a = 0;
-            while (a < 15) {
-                ￼ Star
-                
-                current_index = bi[a];
+            while (a < 15) 
+            {
+              current_index = bi[a];
                 current_dist = bestd[a];
                 printf("%50s\t\t%f\n", vocab[current_index].word, current_dist);
                 a++;
             }
         }
         
-        if (choice == 2) {
+        if (choice == 2) 
+                       {
             printf("\nEnter 3 words (A B C) for formula A - B + C = ?\n");
             printf("Example: king man woman\n");
             printf("Input: ");
@@ -1052,28 +1062,33 @@ void InteractiveLoop() {
             w2 = SearchVocab(st2);
             w3 = SearchVocab(st3);
             
-            if (w1 == -1) {
+            if (w1 == -1)
+            {
                 printf("Word 1 is out of dictionary!\n");
                 continue;
             }
-            if (w2 == -1) {
+            if (w2 == -1) 
+            {
                 printf("Word 2 is out of dictionary!\n");
                 continue;
             }
-            if (w3 == -1) {
+            if (w3 == -1) 
+            {
                 printf("Word 3 is out of dictionary!\n");
                 continue;
             }
             
             a = 0;
-            while (a < layer1_size) {
+            while (a < layer1_size) 
+            {
                 vec[a] = syn0[a + w1*layer1_size] - syn0[a + w2*layer1_size] + syn0[a + w3*layer1_size];
                 a++;
             }
             
             len = 0;
             a = 0;
-            while (a < layer1_size) {
+            while (a < layer1_size) 
+            {
                 len = len + (vec[a] * vec[a]);
                 a++;
             }
@@ -1081,13 +1096,15 @@ void InteractiveLoop() {
             len = sqrt(len);
             
             a = 0;
-            while (a < layer1_size) {
+            while (a < layer1_size) 
+            {
                 vec[a] = vec[a] / len;
                 a++;
             }
             
             a = 0;
-            while (a < 20) {
+            while (a < 20)
+                {
                 bestd[a] = 0;
                 bi[a] = 0;
                 a++;
@@ -1098,24 +1115,40 @@ void InteractiveLoop() {
             printf("------------------------------------------------------------------------\n");
             
             c = 0;
-            while (c < vocab_size) {
-                if (c == w1) { c++; continue; }
-                if (c == w2) { c++; continue; }
-                if (c == w3) { c++; continue; }
+            while (c < vocab_size) 
+            {
+                if (c == w1) { 
+                    c++;
+                    continue;
+                }
+                if (c == w2)
+                { 
+                    c++; 
+                    continue;
+                }
+                if (c == w3)
+                { 
+                    c++;
+                    continue;
+                }
                 
                 dist = 0;
                 a = 0;
-                while (a < layer1_size) {
+                while (a < layer1_size)
+                    {
                     dot_prod = vec[a] * syn0[a + c * layer1_size];
                     dist = dist + dot_prod;
                     a++;
                 }
                 
                 a = 0;
-                while (a < 20) {
-                    if (dist > bestd[a]) {
+                while (a < 20)
+                    {
+                    if (dist > bestd[a]) 
+                    {
                         d = 19;
-                        while (d > a) {
+                        while (d > a)
+                            {
                             bestd[d] = bestd[d - 1];
                             bi[d] = bi[d - 1];
                             d--;
@@ -1130,7 +1163,8 @@ void InteractiveLoop() {
             }
             
             a = 0;
-            while (a < 15) {
+            while (a < 15) 
+            {
                 current_index = bi[a];
                 current_dist = bestd[a];
                 printf("%50s\t\t%f\n", vocab[current_index].word, current_dist);
