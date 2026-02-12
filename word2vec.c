@@ -1401,6 +1401,100 @@ void PerformPairSimilarity()
     printf("\nCosine Similarity (%s, %s) = %f\n", st1, st2, dist);
 }
 
+// -----------------------------------------------------------
+// NEW: ODD ONE OUT (FEATURE 4 REQUEST)
+// -----------------------------------------------------------
+void PerformOddOneOut()
+{
+    char input_line[MAX_STRING * 10];
+    char *token;
+    char words[10][MAX_STRING];
+    long long indices[10];
+    float avg_vec[3000];
+    int word_count = 0;
+    int i;
+    long long a;
+    float len;
+    float min_dist = 100.0; // Start high
+    int odd_one_index = -1;
+    float dist;
+
+    printf("\nEnter list of words (e.g., apple banana car): ");
+    
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF); 
+    
+    if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
+    input_line[strcspn(input_line, "\n")] = 0;
+
+    token = strtok(input_line, " ");
+    while (token != NULL) 
+    {
+        strcpy(words[word_count++], token);
+        token = strtok(NULL, " ");
+    }
+
+    if (word_count < 3) 
+    {
+        printf("Error: Need at least 3 words.\n");
+        return;
+    }
+
+    // 1. Convert words to indices
+    for (i = 0; i < word_count; i++) 
+    {
+        indices[i] = SearchVocab(words[i]);
+        if (indices[i] == -1) 
+        {
+            printf("Error: Word '%s' not in dictionary.\n", words[i]);
+            return;
+        }
+    }
+
+    // 2. Initialize Average Vector
+    for (a = 0; a < layer1_size; a++) 
+    {
+        avg_vec[a] = 0;
+    }
+
+    // 3. Sum vectors
+    for (i = 0; i < word_count; i++) 
+    {
+        for (a = 0; a < layer1_size; a++) 
+        {
+            avg_vec[a] += syn0[a + indices[i] * layer1_size];
+        }
+    }
+
+    // 4. Normalize Average Vector
+    len = 0;
+    for (a = 0; a < layer1_size; a++) len += avg_vec[a] * avg_vec[a];
+    len = sqrt(len);
+    for (a = 0; a < layer1_size; a++) avg_vec[a] /= len;
+
+    // 5. Find word furthest from average (LOWEST Cosine Similarity)
+    for (i = 0; i < word_count; i++) 
+    {
+        dist = 0;
+        for (a = 0; a < layer1_size; a++) 
+        {
+            // Dot product of (Word Vector) * (Average Vector)
+            dist += syn0[a + indices[i] * layer1_size] * avg_vec[a];
+        }
+        
+        // Debug print to see scores
+        printf("Score for '%s': %f\n", words[i], dist);
+
+        if (dist < min_dist) 
+        {
+            min_dist = dist;
+            odd_one_index = i;
+        }
+    }
+
+    printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
+}
+
 void InteractiveLoop() 
 {
     int choice;
@@ -1413,12 +1507,13 @@ void InteractiveLoop()
         printf("1. Similar Words (Input: 'good')\n");
         printf("2. Flexible Word Arithmetic (e.g. king - man + woman)\n");
         printf("3. Pair Similarity (Input: 'mango banana')\n");
-        printf("4. Exit\n");
+        printf("4. Odd One Out (Input: 'apple car banana')\n");
+        printf("5. Exit\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
         
-        if (choice == 4) 
+        if (choice == 5) 
         {
             break;
         }
@@ -1434,6 +1529,10 @@ void InteractiveLoop()
         else if (choice == 3) 
         {
             PerformPairSimilarity();
+        }
+        else if (choice == 4) 
+        {
+            PerformOddOneOut();
         }
     }
 }
