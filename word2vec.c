@@ -36,6 +36,7 @@ long long train_words = 0;
 long long word_count_actual = 0;
 long long min_reduce = 1;
 
+//calcu;latoing exponential values in advance 
 void AllocateExpTable()
 {
     unsigned long size;
@@ -1230,9 +1231,9 @@ void PerformSimilarityCheck()
     }
 }
 
-// -----------------------------------------------------------
-// NEW: FLEXIBLE WORD ARITHMETIC PARSER (FEATURE 2 REQUEST)
-// -----------------------------------------------------------
+// new change 
+// NEW: FLEXIBLE WORD ARITHMETIC PARSER 
+// changing the flexibilty 
 void PerformFlexibleArithmetic()
 {
     char input_line[MAX_STRING * 10]; // Buffer for whole line
@@ -1401,9 +1402,9 @@ void PerformPairSimilarity()
     printf("\nCosine Similarity (%s, %s) = %f\n", st1, st2, dist);
 }
 
-// -----------------------------------------------------------
-// NEW: ODD ONE OUT (FEATURE 4 REQUEST)
-// -----------------------------------------------------------
+// input:bananna mango car 
+// NEW: ODD ONE OUT 
+// output:car removed
 void PerformOddOneOut()
 {
     char input_line[MAX_STRING * 10];
@@ -1495,6 +1496,7 @@ void PerformOddOneOut()
     printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
 }
 
+//my main interaction interface
 void InteractiveLoop() 
 {
     int choice;
@@ -1502,7 +1504,8 @@ void InteractiveLoop()
     while (1) 
     {
         printf("\n");
-        printf("==============================================\n");
+        printf("==============================================");
+        printf("\n");
         printf("Choose Option:\n");
         printf("1. Similar Words (Input: 'good')\n");
         printf("2. Flexible Word Arithmetic (e.g. king - man + woman)\n");
