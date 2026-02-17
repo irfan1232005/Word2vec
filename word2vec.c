@@ -1506,12 +1506,23 @@ void InteractiveLoop()
         printf("\n");
         printf("==============================================");
         printf("\n");
+         printf("\n");
         printf("Choose Option:\n");
-        printf("1. Similar Words (Input: 'good')\n");
-        printf("2. Flexible Word Arithmetic (e.g. king - man + woman)\n");
-        printf("3. Pair Similarity (Input: 'mango banana')\n");
-        printf("4. Odd One Out (Input: 'apple car banana')\n");
-        printf("5. Exit\n");
+        printf("1. Similar Words (Example Input: king)");
+        printf("\n");
+         printf("\n");
+     printf("2. Flexible Word Arithmetic ( Example: king - man + woman)");
+         printf("\n");
+         printf("\n");
+        printf("3. Pair Similarity (Example input:King queen)");
+         printf("\n");
+         printf("\n");
+        printf("4. Odd One Out (Example Input:apple car banana)");
+         printf("\n");
+         printf("\n");
+        printf("5. Exit");
+         printf("\n");
+         printf("\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
@@ -1568,11 +1579,21 @@ int main()
 {
     int mode;
     
-    printf("========================================\n");
-    printf("     Word2Vec C Engine (Ultimate Ver)   \n");
-    printf("========================================\n");
-    printf("1. TRAIN New Model (Takes hours/days)\n");
-    printf("2. PLAY with Existing Model (vectors.txt)\n");
+    printf("========================================");
+     printf("\n");
+     printf("\n");
+    printf("     Word2Vec C Engine (Ultimate Version)  ");
+     printf("\n");
+     printf("\n");
+    printf("========================================");
+     printf("\n");
+     printf("\n");
+    printf("1. TRAIN New Model ..");
+     printf("\n");
+     printf("\n");
+    printf("2. Feature of the Model.. ");
+     printf("\n");
+     printf("\n");
     printf("Select Mode: ");
     
     scanf("%d", &mode);
