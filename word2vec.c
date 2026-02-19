@@ -1496,6 +1496,85 @@ void PerformOddOneOut()
     printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
 }
 
+//new feature (sentence similarity
+//core chrome engine factor 
+void GetSentenceVector(char *sentence, float *vector)
+{
+    char temp[MAX_STRING * 20];
+    char *token;
+    int word_count = 0;
+    long long idx;
+    long long a;
+    float len;
+
+    strcpy(temp, sentence);
+    
+    // Initialize vector to 0
+    for (a = 0; a < layer1_size; a++) vector[a] = 0;
+
+    token = strtok(temp, " \n");
+    while (token != NULL) 
+    {
+        idx = SearchVocab(token);
+        if (idx != -1) 
+        {
+            for (a = 0; a < layer1_size; a++) 
+            {
+                vector[a] += syn0[a + idx * layer1_size];
+            }
+            word_count++;
+        }
+        token = strtok(NULL, " \n");
+    }
+
+    // Normalize (Average then Unit Length)
+    if (word_count > 0) 
+    {
+        len = 0;
+        for (a = 0; a < layer1_size; a++) 
+        {
+            vector[a] /= word_count; // Average
+            len += vector[a] * vector[a];
+        }
+        len = sqrt(len);
+        for (a = 0; a < layer1_size; a++) vector[a] /= len; // Unit Length
+    }
+}
+
+void PerformSentenceSimilarity()
+{
+    char sent1[MAX_STRING * 20];
+    char sent2[MAX_STRING * 20];
+    float vec1[3000]; // Assuming vector size 300
+    float vec2[3000];
+    float dist;
+    long long a;
+
+    // Clear buffer
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF);
+
+    printf("\nEnter Sentence A: ");
+    if (fgets(sent1, sizeof(sent1), stdin) == NULL) return;
+    sent1[strcspn(sent1, "\n")] = 0;
+
+    printf("Enter Sentence B: ");
+    if (fgets(sent2, sizeof(sent2), stdin) == NULL) return;
+    sent2[strcspn(sent2, "\n")] = 0;
+
+    GetSentenceVector(sent1, vec1);
+    GetSentenceVector(sent2, vec2);
+
+    // Calculate Cosine Similarity (Dot Product of normalized vectors)
+    dist = 0;
+    for (a = 0; a < layer1_size; a++) 
+    {
+        dist += vec1[a] * vec2[a];
+    }
+
+    printf("\nSemantic Similarity Score: %f\n", dist);
+}
+
 //my main interaction interface
 void InteractiveLoop() 
 {
@@ -1520,6 +1599,7 @@ void InteractiveLoop()
         printf("4. Odd One Out (Example Input:apple car banana)");
          printf("\n");
          printf("\n");
+        //for sentence similarity 
         printf("5. Exit");
          printf("\n");
          printf("\n");
