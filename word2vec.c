@@ -1574,6 +1574,68 @@ void PerformSentenceSimilarity()
 
     printf("\nSemantic Similarity Score: %f\n", dist);
 }
+//clustering using k mean clustering algorithm
+//dividing into multiple groups
+void PerformWordClustering()
+{
+    char input_line[MAX_STRING * 20];
+    char center1[MAX_STRING], center2[MAX_STRING];
+    char words[20][MAX_STRING];
+    long long idx_c1, idx_c2, idx_word;
+    int word_count = 0;
+    float dist1, dist2;
+    int i;
+
+    printf("\nEnter two 'Center' words (e.g. fruit animal): ");
+    scanf("%s %s", center1, center2);
+
+    idx_c1 = SearchVocab(center1);
+    idx_c2 = SearchVocab(center2);
+
+    if (idx_c1 == -1 || idx_c2 == -1) 
+    {
+        printf("Error: One of the center words is not in vocabulary.\n");
+        return;
+    }
+
+    // Clear buffer
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF);
+
+    printf("Enter list of words to sort (e.g. apple lion banana tiger): ");
+    if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
+    input_line[strcspn(input_line, "\n")] = 0;
+
+    char *token = strtok(input_line, " ");
+    while (token != NULL) 
+    {
+        strcpy(words[word_count++], token);
+        token = strtok(NULL, " ");
+    }
+
+    printf("\n--- Clustering Results ---\n");
+    printf("Group 1 (%s) | Group 2 (%s)\n", center1, center2);
+    printf("--------------------------------\n");
+
+    for (i = 0; i < word_count; i++) 
+    {
+        idx_word = SearchVocab(words[i]);
+        if (idx_word == -1) continue;
+
+        dist1 = CalculateCosineSimilarity(idx_word, idx_c1);
+        dist2 = CalculateCosineSimilarity(idx_word, idx_c2);
+
+        if (dist1 > dist2) 
+        {
+            printf("%-15s -> %s\n", words[i], center1);
+        } 
+        else 
+        {
+            printf("%-15s -> %s\n", words[i], center2);
+        }
+    }
+}
+
 
 //my main interaction interface
 void InteractiveLoop() 
