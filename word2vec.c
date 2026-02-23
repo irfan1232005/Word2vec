@@ -36,7 +36,6 @@ long long train_words = 0;
 long long word_count_actual = 0;
 long long min_reduce = 1;
 
-//calcu;latoing exponential values in advance 
 void AllocateExpTable()
 {
     unsigned long size;
@@ -1131,7 +1130,7 @@ void LoadModel()
 }
 
 // -----------------------------------------------------------
-// NEW: SEPARATE COSINE SIMILARITY FUNCTION (FEATURE 1 REQUEST)
+// NEW: SEPARATE COSINE SIMILARITY FUNCTION 
 // -----------------------------------------------------------
 float CalculateCosineSimilarity(long long word1_idx, long long word2_idx)
 {
@@ -1197,7 +1196,6 @@ void PerformSimilarityCheck()
             continue;
         }
         
-        // Reusing the Separate Calculation Function
         dist = CalculateCosineSimilarity(b, c);
         
         a = 0;
@@ -1231,9 +1229,9 @@ void PerformSimilarityCheck()
     }
 }
 
-// new change 
-// NEW: FLEXIBLE WORD ARITHMETIC PARSER 
-// changing the flexibilty 
+// -----------------------------------------------------------
+// NEW: FLEXIBLE WORD ARITHMETIC PARSER
+// -----------------------------------------------------------
 void PerformFlexibleArithmetic()
 {
     char input_line[MAX_STRING * 10]; // Buffer for whole line
@@ -1249,7 +1247,6 @@ void PerformFlexibleArithmetic()
     float bestd[40];
     long long bi[40];
     long long a, c, d, current_index;
-    float current_dist;
     int i;
 
     printf("\nEnter Equation (e.g., king - man + woman): ");
@@ -1304,8 +1301,6 @@ void PerformFlexibleArithmetic()
     }
 
     // Apply Operations
-    // Note: Assuming Input is "Word1 Op1 Word2 Op2 Word3"
-    // e.g. King - Man + Woman -> Word1=King, Op1=-, Word2=Man, Op2=+, Word3=Woman
     for (i = 1; i < word_count; i++) 
     {
         char op = (i-1 < op_count) ? ops[i-1] : '+'; // Default to + if op missing
@@ -1368,7 +1363,7 @@ void PerformFlexibleArithmetic()
 }
 
 // -----------------------------------------------------------
-// NEW: PAIR SIMILARITY CHECK (FEATURE 3 REQUEST)
+// NEW: PAIR SIMILARITY CHECK 
 // -----------------------------------------------------------
 void PerformPairSimilarity()
 {
@@ -1396,15 +1391,14 @@ void PerformPairSimilarity()
         return;
     }
     
-    // Call separate math function
     dist = CalculateCosineSimilarity(w1, w2);
     
     printf("\nCosine Similarity (%s, %s) = %f\n", st1, st2, dist);
 }
 
-// input:bananna mango car 
-// NEW: ODD ONE OUT 
-// output:car removed
+// -----------------------------------------------------------
+// NEW: ODD ONE OUT (Feature 4)
+// -----------------------------------------------------------
 void PerformOddOneOut()
 {
     char input_line[MAX_STRING * 10];
@@ -1441,7 +1435,7 @@ void PerformOddOneOut()
         return;
     }
 
-    // 1. Convert words to indices
+    // Convert words to indices
     for (i = 0; i < word_count; i++) 
     {
         indices[i] = SearchVocab(words[i]);
@@ -1452,13 +1446,13 @@ void PerformOddOneOut()
         }
     }
 
-    // 2. Initialize Average Vector
+    // Initialize Average Vector
     for (a = 0; a < layer1_size; a++) 
     {
         avg_vec[a] = 0;
     }
 
-    // 3. Sum vectors
+    // Sum vectors
     for (i = 0; i < word_count; i++) 
     {
         for (a = 0; a < layer1_size; a++) 
@@ -1467,25 +1461,21 @@ void PerformOddOneOut()
         }
     }
 
-    // 4. Normalize Average Vector
+    // Normalize Average Vector
     len = 0;
     for (a = 0; a < layer1_size; a++) len += avg_vec[a] * avg_vec[a];
     len = sqrt(len);
     for (a = 0; a < layer1_size; a++) avg_vec[a] /= len;
 
-    // 5. Find word furthest from average (LOWEST Cosine Similarity)
+    // Find word furthest from average
     for (i = 0; i < word_count; i++) 
     {
         dist = 0;
         for (a = 0; a < layer1_size; a++) 
         {
-            // Dot product of (Word Vector) * (Average Vector)
             dist += syn0[a + indices[i] * layer1_size] * avg_vec[a];
         }
         
-        // Debug print to see scores
-        printf("Score for '%s': %f\n", words[i], dist);
-
         if (dist < min_dist) 
         {
             min_dist = dist;
@@ -1493,11 +1483,12 @@ void PerformOddOneOut()
         }
     }
 
-    printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
+    printf("\nOdd One Out: %s (Furthest distance from average)\n", words[odd_one_index]);
 }
 
-//new feature (sentence similarity
-//core chrome engine factor 
+// -----------------------------------------------------------
+// NEW: SENTENCE SIMILARITY (FEATURE 5 - Search Engine Logic)
+// -----------------------------------------------------------
 void GetSentenceVector(char *sentence, float *vector)
 {
     char temp[MAX_STRING * 20];
@@ -1574,8 +1565,10 @@ void PerformSentenceSimilarity()
 
     printf("\nSemantic Similarity Score: %f\n", dist);
 }
-//clustering using k mean clustering algorithm
-//dividing into multiple groups
+
+// -----------------------------------------------------------
+// NEW: WORD CLUSTERING (FEATURE 6 - The Categorizer)
+// -----------------------------------------------------------
 void PerformWordClustering()
 {
     char input_line[MAX_STRING * 20];
@@ -1636,8 +1629,6 @@ void PerformWordClustering()
     }
 }
 
-
-//my main interaction interface
 void InteractiveLoop() 
 {
     int choice;
@@ -1645,31 +1636,20 @@ void InteractiveLoop()
     while (1) 
     {
         printf("\n");
-        printf("==============================================");
-        printf("\n");
-         printf("\n");
+        printf("==============================================\n");
         printf("Choose Option:\n");
-        printf("1. Similar Words (Example Input: king)");
-        printf("\n");
-         printf("\n");
-     printf("2. Flexible Word Arithmetic ( Example: king - man + woman)");
-         printf("\n");
-         printf("\n");
-        printf("3. Pair Similarity (Example input:King queen)");
-         printf("\n");
-         printf("\n");
-        printf("4. Odd One Out (Example Input:apple car banana)");
-         printf("\n");
-         printf("\n");
-        //for sentence similarity 
-        printf("5. Exit");
-         printf("\n");
-         printf("\n");
+        printf("1. Similar Words (Input: 'good')\n");
+        printf("2. Flexible Word Arithmetic (e.g. king - man + woman)\n");
+        printf("3. Pair Similarity (Input: 'mango banana')\n");
+        printf("4. Odd One Out (Input: 'apple car banana')\n");
+        printf("5. Sentence Similarity (Input: 2 sentences)\n");
+        printf("6. Word Clustering (Input: 2 centers + word list)\n");
+        printf("7. Exit\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
         
-        if (choice == 5) 
+        if (choice == 7) 
         {
             break;
         }
@@ -1689,6 +1669,14 @@ void InteractiveLoop()
         else if (choice == 4) 
         {
             PerformOddOneOut();
+        }
+        else if (choice == 5)
+        {
+            PerformSentenceSimilarity();
+        }
+        else if (choice == 6)
+        {
+            PerformWordClustering();
         }
     }
 }
@@ -1721,21 +1709,11 @@ int main()
 {
     int mode;
     
-    printf("========================================");
-     printf("\n");
-     printf("\n");
-    printf("     Word2Vec C Engine (Ultimate Version)  ");
-     printf("\n");
-     printf("\n");
-    printf("========================================");
-     printf("\n");
-     printf("\n");
-    printf("1. TRAIN New Model ..");
-     printf("\n");
-     printf("\n");
-    printf("2. Feature of the Model.. ");
-     printf("\n");
-     printf("\n");
+    printf("========================================\n");
+    printf("     Word2Vec C Engine (Final V3)       \n");
+    printf("========================================\n");
+    printf("1. TRAIN New Model (Takes hours/days)\n");
+    printf("2. PLAY with Existing Model (vectors.txt)\n");
     printf("Select Mode: ");
     
     scanf("%d", &mode);
