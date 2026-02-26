@@ -1,3 +1,5 @@
+//word2vec algorithm 
+//designing it from scratch 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1514,118 +1516,306 @@ void PerformOddOneOut()
 
     printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
 }
-
-// -----------------------------------------------------------
-// NEW: KNN CLASSIFIER (FEATURE 5 REQUEST)
-// -----------------------------------------------------------
-void PerformKNNClassification()
+void GetSentenceVector(char *sentence, float *vector)
 {
-    // 1. Setup Labeled Data (The "Training Set" for KNN)
-    // Categories: 0=Food, 1=Job, 2=Animal, 3=Country
-    char *seeds[] = {
-        "apple", "pizza", "rice", "burger", "bread", // Food (0)
-        "doctor", "engineer", "teacher", "nurse", "lawyer", // Job (1)
-        "dog", "cat", "lion", "tiger", "fish", // Animal (2)
-        "france", "china", "germany", "japan", "india" // Country (3)
-    };
-    int labels[] = {
-        0, 0, 0, 0, 0,
-        1, 1, 1, 1, 1,
-        2, 2, 2, 2, 2,
-        3, 3, 3, 3, 3
-    };
-    char *class_names[] = {"Food", "Profession", "Animal", "Country"};
-    int num_seeds = 20;
-    int k = 3; // K-Nearest Neighbors
+    char temp[MAX_STRING * 20];
+    char *token;
+    int word_count = 0;
+    long long idx;
+    long long a;
+    float len;
 
-    char input_word[MAX_STRING];
-    long long input_idx, seed_idx;
-    float dist;
+    strcpy(temp, sentence);
     
-    // Arrays to store distances for sorting
-    float neighbor_dists[20];
-    int neighbor_labels[20];
-    char *neighbor_words[20];
+    // Initialize vector to 0
+    for (a = 0; a < layer1_size; a++) vector[a] = 0;
 
-    printf("\n--- AI Category Guesser (KNN) ---\n");
-    printf("I know 4 categories: Food, Profession, Animal, Country.\n");
-    printf("Enter a word (e.g. 'pasta' or 'shark'): ");
-    scanf("%s", input_word);
-
-    input_idx = SearchVocab(input_word);
-    if (input_idx == -1) 
+    token = strtok(temp, " \n");
+    while (token != NULL) 
     {
-        printf("Error: '%s' is not in the dictionary.\n", input_word);
+        idx = SearchVocab(token);
+        if (idx != -1) 
+        {
+            for (a = 0; a < layer1_size; a++) 
+            {
+                vector[a] += syn0[a + idx * layer1_size];
+            }
+            word_count++;
+        }
+        token = strtok(NULL, " \n");
+    }
+
+    // Normalize (Average then Unit Length)
+    if (word_count > 0) 
+    {
+        len = 0;
+        for (a = 0; a < layer1_size; a++) 
+        {
+            vector[a] /= word_count; // Mathematical Average
+            len += vector[a] * vector[a];
+        }
+        len = sqrt(len);
+        for (a = 0; a < layer1_size; a++) vector[a] /= len; // Convert to Unit Vector
+    }
+}
+
+void PerformSentenceSimilarity()
+{
+    char sent1[MAX_STRING * 20];
+    char sent2[MAX_STRING * 20];
+    float vec1[3000]; // Assuming vector size is safely <= 3000
+    float vec2[3000];
+    float dist;
+    long long a;
+
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF);
+
+    printf("\nEnter Sentence A: ");
+    if (fgets(sent1, sizeof(sent1), stdin) == NULL) return;
+    sent1[strcspn(sent1, "\n")] = 0;
+
+    printf("Enter Sentence B: ");
+    if (fgets(sent2, sizeof(sent2), stdin) == NULL) return;
+    sent2[strcspn(sent2, "\n")] = 0;
+
+    GetSentenceVector(sent1, vec1);
+    GetSentenceVector(sent2, vec2);
+
+    // Calculate Cosine Similarity (Dot Product of the two normalized Sentence Vectors)
+    dist = 0;
+    for (a = 0; a < layer1_size; a++) 
+    {
+        dist += vec1[a] * vec2[a];
+    }
+
+    printf("\nSemantic Similarity Score: %f\n", dist);
+}
+
+void PerformWordClustering()
+{
+    char input_line[MAX_STRING * 20];
+    char words[50][MAX_STRING];
+    long long indices[50];// -----------------------------------------------------------
+    // NEW: K-MEANS CLUSTERING (REPLACING OLD FEATURE 6)
+    // -----------------------------------------------------------
+    void PerformWordClustering()
+    {
+        char input_line[MAX_STRING * 20];
+        char words[50][MAX_STRING];
+        long long indices[50];
+        int cluster_assignment[50];
+        float centroids[10][300]; // Max 10 clusters, 300 dimensions
+        int word_count = 0, k_clusters = 0;
+        int i, j, c, iter;
+    
+        printf("\n--- K-Means Word Clustering ---");
+        printf("\nHow many groups (K) do you want to create? ");
+        scanf("%d", &k_clusters);
+        
+        if (k_clusters < 2 || k_clusters > 10) {
+            printf("Please choose K between 2 and 10.\n");
+            return;
+        }
+    
+        // Clear buffer and get words
+        int ch; while ((ch = getchar()) != '\n' && ch != EOF);
+        printf("Enter words (e.g., car banana tiger mango lion bus): ");
+        if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
+        input_line[strcspn(input_line, "\n")] = 0;
+    
+        // Tokenize words and find indices
+        char *token = strtok(input_line, " ");
+        while (token != NULL && word_count < 50) {
+            long long idx = SearchVocab(token);
+            if (idx != -1) {
+                strcpy(words[word_count], token);
+                indices[word_count] = idx;
+                word_count++;
+            } else {
+                printf("Skipping '%s' (not in vocab).\n", token);
+            }
+            token = strtok(NULL, " ");
+        }
+    
+        if (word_count < k_clusters) {
+            printf("Error: Not enough valid words for %d clusters.\n", k_clusters);
+            return;
+        }
+    
+        // 1. INITIALIZATION: Pick first K words as starting centroids
+        for (i = 0; i < k_clusters; i++) {
+            for (c = 0; c < layer1_size; c++) {
+                centroids[i][c] = syn0[c + indices[i] * layer1_size];
+            }
+        }
+    
+        // 2. K-MEANS ITERATIONS
+        for (iter = 0; iter < 10; iter++) {
+            // A. Assignment Step
+            for (i = 0; i < word_count; i++) {
+                float max_sim = -2.0;
+                int best_cluster = 0;
+                for (j = 0; j < k_clusters; j++) {
+                    float sim = 0;
+                    // Cosine similarity between word and centroid
+                    for (c = 0; c < layer1_size; c++) {
+                        sim += syn0[c + indices[i] * layer1_size] * centroids[j][c];
+                    }
+                    if (sim > max_sim) {
+                        max_sim = sim;
+                        best_cluster = j;
+                    }
+                }
+                cluster_assignment[i] = best_cluster;
+            }
+    
+            // B. Update Step: Recalculate Centroids
+            for (j = 0; j < k_clusters; j++) {
+                float new_vec[300] = {0};
+                int count = 0;
+                for (i = 0; i < word_count; i++) {
+                    if (cluster_assignment[i] == j) {
+                        for (c = 0; c < layer1_size; c++) new_vec[c] += syn0[c + indices[i] * layer1_size];
+                        count++;
+                    }
+                }
+                if (count > 0) {
+                    float len = 0;
+                    for (c = 0; c < layer1_size; c++) {
+                        new_vec[c] /= count;
+                        len += new_vec[c] * new_vec[c];
+                    }
+                    len = sqrt(len);
+                    for (c = 0; c < layer1_size; c++) centroids[j][c] = new_vec[c] / len;
+                }
+            }
+        }
+    
+        // 3. DISPLAY RESULTS
+        printf("\n--- Clustering Results ---\n");
+        for (j = 0; j < k_clusters; j++) {
+            printf("Group %d: ", j + 1);
+            int found = 0;
+            for (i = 0; i < word_count; i++) {
+                if (cluster_assignment[i] == j) {
+                    printf("%s ", words[i]);
+                    found = 1;
+                }
+            }
+            if (!found) printf("[Empty]");
+            printf("\n");
+        }
+    }
+    int cluster_assignment[50];
+    float centroids[10][300]; // Max 10 clusters, 300 dimensions
+    int word_count = 0, k_clusters = 0;
+    int i, j, c, iter;
+
+    printf("\n--- K-Means Word Clustering ---");
+    printf("\nHow many groups (K) do you want to create? ");
+    scanf("%d", &k_clusters);
+    
+    if (k_clusters < 2 || k_clusters > 10) {
+        printf("Please choose K between 2 and 10.\n");
         return;
     }
 
-    // 2. Calculate Distances to ALL Seed Words
-    int i;
-    for (i = 0; i < num_seeds; i++) 
-    {
-        seed_idx = SearchVocab(seeds[i]);
-        if (seed_idx == -1) 
-        {
-            neighbor_dists[i] = -1.0; // Seed missing from dict (skip)
-        } 
-        else 
-        {
-            // Use your existing math function
-            neighbor_dists[i] = CalculateCosineSimilarity(input_idx, seed_idx);
+    // Clear buffer and get words
+    int ch; while ((ch = getchar()) != '\n' && ch != EOF);
+    printf("Enter words (e.g., car banana tiger mango lion bus): ");
+    if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
+    input_line[strcspn(input_line, "\n")] = 0;
+
+    // Tokenize words and find indices
+    char *token = strtok(input_line, " ");
+    while (token != NULL && word_count < 50) {
+        long long idx = SearchVocab(token);
+        if (idx != -1) {
+            strcpy(words[word_count], token);
+            indices[word_count] = idx;
+            word_count++;
+        } else {
+            printf("Skipping '%s' (not in vocab).\n", token);
         }
-        neighbor_labels[i] = labels[i];
-        neighbor_words[i] = seeds[i];
+        token = strtok(NULL, " ");
     }
 
-    // 3. Sort to find the K Nearest Neighbors (Simple Bubble Sort)
-    int j;
-    for (i = 0; i < num_seeds - 1; i++) 
-    {
-        for (j = 0; j < num_seeds - i - 1; j++) 
-        {
-            if (neighbor_dists[j] < neighbor_dists[j + 1]) // Sort Descending (Higher Sim is better)
-            {
-                // Swap Distance
-                float temp_d = neighbor_dists[j];
-                neighbor_dists[j] = neighbor_dists[j + 1];
-                neighbor_dists[j + 1] = temp_d;
+    if (word_count < k_clusters) {
+        printf("Error: Not enough valid words for %d clusters.\n", k_clusters);
+        return;
+    }
 
-                // Swap Label
-                int temp_l = neighbor_labels[j];
-                neighbor_labels[j] = neighbor_labels[j + 1];
-                neighbor_labels[j + 1] = temp_l;
+    // 1. INITIALIZATION: Pick first K words as starting centroids
+    for (i = 0; i < k_clusters; i++) {
+        for (c = 0; c < layer1_size; c++) {
+            centroids[i][c] = syn0[c + indices[i] * layer1_size];
+        }
+    }
 
-                // Swap Name (for display)
-                char *temp_w = neighbor_words[j];
-                neighbor_words[j] = neighbor_words[j + 1];
-                neighbor_words[j + 1] = temp_w;
+    // 2. K-MEANS ITERATIONS
+    for (iter = 0; iter < 10; iter++) {
+        // A. Assignment Step
+        for (i = 0; i < word_count; i++) {
+            float max_sim = -2.0;
+            int best_cluster = 0;
+            for (j = 0; j < k_clusters; j++) {
+                float sim = 0;
+                // Cosine similarity between word and centroid
+                for (c = 0; c < layer1_size; c++) {
+                    sim += syn0[c + indices[i] * layer1_size] * centroids[j][c];
+                }
+                if (sim > max_sim) {
+                    max_sim = sim;
+                    best_cluster = j;
+                }
+            }
+            cluster_assignment[i] = best_cluster;
+        }
+
+        // B. Update Step: Recalculate Centroids
+        for (j = 0; j < k_clusters; j++) {
+            float new_vec[300] = {0};
+            int count = 0;
+            for (i = 0; i < word_count; i++) {
+                if (cluster_assignment[i] == j) {
+                    for (c = 0; c < layer1_size; c++) new_vec[c] += syn0[c + indices[i] * layer1_size];
+                    count++;
+                }
+            }
+            if (count > 0) {
+                float len = 0;
+                for (c = 0; c < layer1_size; c++) {
+                    new_vec[c] /= count;
+                    len += new_vec[c] * new_vec[c];
+                }
+                len = sqrt(len);
+                for (c = 0; c < layer1_size; c++) centroids[j][c] = new_vec[c] / len;
             }
         }
     }
 
-    // 4. Vote (KNN Logic)
-    int votes[4] = {0, 0, 0, 0};
-    printf("\nTop %d Nearest Neighbors:\n", k);
-    for (i = 0; i < k; i++) 
-    {
-        printf("%d. %s (Sim: %f) -> Is a %s\n", i+1, neighbor_words[i], neighbor_dists[i], class_names[neighbor_labels[i]]);
-        votes[neighbor_labels[i]]++;
-    }
-
-    // 5. Determine Winner
-    int winner = -1;
-    int max_votes = -1;
-    for (i = 0; i < 4; i++) 
-    {
-        if (votes[i] > max_votes) 
-        {
-            max_votes = votes[i];
-            winner = i;
+    // 3. DISPLAY RESULTS
+    printf("\n--- Clustering Results ---\n");
+    for (j = 0; j < k_clusters; j++) {
+        printf("Group %d: ", j + 1);
+        int found = 0;
+        for (i = 0; i < word_count; i++) {
+            if (cluster_assignment[i] == j) {
+                printf("%s ", words[i]);
+                found = 1;
+            }
         }
+        if (!found)
+        {
+             printf("[Empty]");
+        printf("\n");
     }
-
-    printf("\n>>> AI Prediction: '%s' is a %s\n", input_word, class_names[winner]);
 }
+}
+
+
+
 
 void InteractiveLoop() 
 {
@@ -1640,13 +1830,14 @@ void InteractiveLoop()
         printf("2. Flexible Word Arithmetic (e.g. king - man + woman)\n");
         printf("3. Pair Similarity (Input: 'mango banana')\n");
         printf("4. Odd One Out (Input: 'apple car banana')\n");
-        printf("5. AI Category Guesser (KNN) [NEW]\n");
-        printf("6. Exit\n");
+        printf("5. Sentence Similarity (Input: 2 sentences)\n");
+        printf("6. Word Clustering (Input: 2 centers + word list)\n");
+        printf("7. Exit\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
         
-        if (choice == 6) 
+        if (choice == 7) 
         {
             break;
         }
@@ -1667,10 +1858,14 @@ void InteractiveLoop()
         {
             PerformOddOneOut();
         }
-        else if (choice == 5)
+        else if (choice == 5) 
         {
-            PerformKNNClassification();
-        }
+            PerformSentenceSimilarity();
+               }
+                      else if (choice == 6) {
+                        PerformWordClustering();
+                      }
+    
     }
 }
 
