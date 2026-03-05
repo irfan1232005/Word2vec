@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
+//declaring global variables 
 #define MAX_STRING 100
 #define EXP_TABLE_SIZE 1000
 #define MAX_EXP 6
@@ -37,7 +37,7 @@ long long vocab_size = 0;
 long long train_words = 0;
 long long word_count_actual = 0;
 long long min_reduce = 1;
-
+//calculating exp value for shortcut
 void AllocateExpTable()
 {
     unsigned long size;
