@@ -1796,7 +1796,9 @@ void PerformWordClustering()
     }
 
     // 3. DISPLAY RESULTS
-    printf("\n--- Clustering Results ---\n");
+printf("\n");
+    printf("--- Clustering Results ---");
+printf("\n");
     for (j = 0; j < k_clusters; j++) {
         printf("Group %d: ", j + 1);
         int found = 0;
@@ -1816,7 +1818,7 @@ void PerformWordClustering()
 
 
 
-
+//my main interface on terminal
 void InteractiveLoop() 
 {
     int choice;
@@ -1825,14 +1827,30 @@ void InteractiveLoop()
     {
         printf("\n");
         printf("==============================================\n");
+        printf("\n");
         printf("Choose Option:\n");
-        printf("1. Similar Words (Input: 'good')\n");
-        printf("2. Flexible Word Arithmetic (e.g. king - man + woman)\n");
-        printf("3. Pair Similarity (Input: 'mango banana')\n");
-        printf("4. Odd One Out (Input: 'apple car banana')\n");
-        printf("5. Sentence Similarity (Input: 2 sentences)\n");
-        printf("6. Word Clustering (Input: 2 centers + word list)\n");
-        printf("7. Exit\n");
+        printf("\n");
+        printf("1. Similar Words (Input: 'good')");
+        printf("\n");
+        printf("\n");
+        printf("2. Flexible Word Arithmetic (e.g. king - man + woman)");
+        printf("\n");
+        printf("\n");
+        printf("3. Pair Similarity (Input: 'mango banana')");
+        printf("\n");
+        printf("\n");
+        printf("4. Odd One Out (Input: 'apple car banana')");
+        printf("\n");
+        printf("\n");
+        printf("5. Sentence Similarity (Input: 2 sentences)");
+        printf("\n");
+        printf("\n");
+        printf("6. Word Clustering :");
+        printf("\n");
+        printf("\n");
+        printf("7. Exit");
+        printf("\n");
+        printf("\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
@@ -1888,7 +1906,8 @@ void AllocateInitialMemory()
     
     if (vocab_hash == NULL) 
     {
-        printf("Initial hash allocation failed\n");
+        printf("Initial hash allocation failed");
+        printf("\n");
         exit(1);
     }
 }
@@ -1897,11 +1916,16 @@ int main()
 {
     int mode;
     
-    printf("========================================\n");
-    printf("     Word2Vec C Engine (Ultimate Ver)   \n");
-    printf("========================================\n");
-    printf("1. TRAIN New Model (Takes hours/days)\n");
-    printf("2. PLAY with Existing Model (vectors.txt)\n");
+    printf("========================================");
+    printf("\n");
+    printf("     Word2Vec C Engine (Ultimate Ver)   ");
+    printf("\n");
+    printf("========================================");
+    printf("\n");
+    printf("1. TRAIN New Model ");
+    printf("\n");
+    printf("2. PLAY with Existing Model (vectors.txt)");
+    printf("\n");
     printf("Select Mode: ");
     
     scanf("%d", &mode);
