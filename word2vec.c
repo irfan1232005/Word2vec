@@ -1516,6 +1516,8 @@ void PerformOddOneOut()
 
     printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
 }
+//loading the vectors of every part of the sentence
+
 void GetSentenceVector(char *sentence, float *vector)
 {
     char temp[MAX_STRING * 20];
