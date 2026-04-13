@@ -120,10 +120,9 @@ static inline float GetSigmoid(float f)
     return result;
 }
 
-// --------------------------------------------------------------------------
+
 // FUNCTION: BACKPROPAGATION
-// --------------------------------------------------------------------------
-// This function calculates how much error needs to be sent back to the Hidden Layer.
+// calculates how much error needs to be sent back to the Hidden Layer.
 static inline void Backpropagation(long long l2, float g, float *neu1_error) 
 {
     int c;
