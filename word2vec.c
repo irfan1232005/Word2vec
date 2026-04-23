@@ -1,10 +1,12 @@
-//word2vec algorithm 
-//designing it from scratch 
+//word2vec algorithm of word embeddding in Natural language processing 
+//developing it from scratch 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-//declaring global variables 
+//declaring global variable
 #define MAX_STRING 100
 #define EXP_TABLE_SIZE 1000
 #define MAX_EXP 6
@@ -13,7 +15,9 @@
 
 long long layer1_size = 300;
 long long min_count = 50;
+//maximum window size
 int window = 5;
+//negative sample number
 int negative = 5;
 float alpha = 0.025;
 float sample = 1e-3;
@@ -37,7 +41,7 @@ long long vocab_size = 0;
 long long train_words = 0;
 long long word_count_actual = 0;
 long long min_reduce = 1;
-//calculating exp value for shortcut
+
 void AllocateExpTable()
 {
     unsigned long size;
@@ -46,7 +50,8 @@ void AllocateExpTable()
     
     if (expTable == NULL) 
     {
-        printf("Memory allocation failed for ExpTable\n");
+        printf("Memory allocation failed for ExpTable");
+        printf("/n");
         exit(1);
     }
 }
@@ -83,6 +88,7 @@ void InitExpTable()
     AllocateExpTable();
     FillExpTable();
 }
+//sigmoid function implementation
 
 static inline float GetSigmoid(float f) 
 {
@@ -121,8 +127,7 @@ static inline float GetSigmoid(float f)
 }
 
 
-// FUNCTION: BACKPROPAGATION
-// calculates how much error needs to be sent back to the Hidden Layer.
+// This function calculates how much error needs to be sent back to the Hidden Layer.
 static inline void Backpropagation(long long l2, float g, float *neu1_error) 
 {
     int c;
@@ -141,11 +146,9 @@ static inline void Backpropagation(long long l2, float g, float *neu1_error)
     }
 }
 
-// --------------------------------------------------------------------------
-// NEW FUNCTION: GRADIENT DESCENT OPTIMIZATION
-// --------------------------------------------------------------------------
-// This function updates the weights of the Output Layer to minimize error.
-static inline void GradientDescentOptimization(long long l1, long long l2, float g) 
+
+// This function updates the weights of the Output Layer using the explicit Hidden Layer.
+static inline void GradientDescentOptimization(long long l2, float g, float *hidden_layer) 
 {
     int c;
     float product;
@@ -153,8 +156,8 @@ static inline void GradientDescentOptimization(long long l1, long long l2, float
     c = 0;
     while (c < layer1_size) 
     {
-        // Calculate the adjustment value: Gradient * Input (Hidden Layer Activation)
-        product = g * syn0[l1 + c];
+        // Calculate the adjustment value: Gradient * Hidden Layer Activation
+        product = g * hidden_layer[c];
         
         // Update Rule: NewWeight = OldWeight + Adjustment
         syn1neg[l2 + c] = syn1neg[l2 + c] + product;
@@ -162,64 +165,66 @@ static inline void GradientDescentOptimization(long long l1, long long l2, float
     }
 }
 
-// --------------------------------------------------------------------------
-// RENAMED FUNCTION: ANN (Artificial Neural Network)
-// --------------------------------------------------------------------------
+
+//  (Artificial Neural Network)
+
 static inline void ann(long long input_idx, long long target_idx, int label, float alpha, float *neu1_error) 
 {
-    long long l1; // Index for Input/Hidden Layer
-    long long l2; // Index for Output Layer
+    long long l1; // Index for Input Layer weights
+    long long l2; // Index for Output Layer weights
     float f;      // Raw Output Score
     float g;      // Gradient
     float pred;   // Predicted Probability
-    float product;
     float diff;   // Error
     int c;
     
-    // --- 1. INPUT LAYER ---
-    // The input is the One-Hot index of the word.
-    // In Word2Vec, we skip multiplying by a one-hot vector and directly access the row.
     l1 = input_idx * layer1_size; 
-    
-    l2 = target_idx * layer1_size; // Pointer to Output Layer weights
+    l2 = target_idx * layer1_size; 
     f = 0;
     
-    // --- 2. HIDDEN LAYER CALCULATION ---
-    // This loop performs the Dot Product: Hidden Layer (syn0) * Output Weights (syn1neg).
-    // This is the "Forward Pass" calculation.
+    //the hidden layer 
+    float hidden_layer[3000]; 
+    
+    
+    // Copy the activated input word's weights directly into our explicit Hidden Layer
     c = 0;
     while (c < layer1_size) 
     {
-        // Calculation happening in Hidden Layer neurons projecting to Output
-        product = syn0[l1 + c] * syn1neg[l2 + c];
-        f = f + product;
+        hidden_layer[c] = syn0[l1 + c];
+        c++;
+    }
+    
+
+    // Perform Dot Product: Hidden Layer * Output Weights (syn1neg)
+    c = 0;
+    while (c < layer1_size) 
+    {
+        f = f + (hidden_layer[c] * syn1neg[l2 + c]);
         c++;
     }
 
-    // --- 3. OUTPUT LAYER ---
-    // Apply Activation Function (Sigmoid) to get probability (0 to 1)
+    // Apply Activation Function  to get probability (0 to 1)
     pred = GetSigmoid(f);
     
-    // Calculate Prediction Error
+    // Calculate Prediction Error using error function
+    //binary entropy
     diff = label - pred;
     
-    // Calculate Gradient (Error * Learning Rate)
+    // Calculate Gradient (Error * Learning Rate
     g = diff * alpha;
 
-    // --- 4. BACKPROPAGATION ---
-    // Send error back from Output to Hidden Layer
+    
     Backpropagation(l2, g, neu1_error);
 
-    // --- 5. OPTIMIZATION (Gradient Descent) ---
-    // Minimize error by updating Output Weights (syn1neg) immediately
-    GradientDescentOptimization(l1, l2, g);
+    // optimization
+    GradientDescentOptimization(l2, g, hidden_layer);
 }
 
 void ReadCharFromFile(FILE *fin, int *ch)
 {
     *ch = fgetc(fin);
 }
-
+//word reading from the corpus
 void ReadWord(char *word, FILE *fin) 
 {
     int a;
@@ -274,7 +279,7 @@ void ReadWord(char *word, FILE *fin)
     }
     word[a] = 0;
 }
-
+//calculate hash of the words
 unsigned long long CalculateHash(char *word, int len)
 {
     unsigned long long hash;
@@ -289,7 +294,7 @@ unsigned long long CalculateHash(char *word, int len)
     }
     return hash;
 }
-
+//gets the hash of every required words
 int GetWordHash(char *word) 
 {
     unsigned long long hash;
@@ -483,7 +488,7 @@ void SortVocab()
         exit(1);
     }
 }
-
+//removing rare words from our vocab
 void ReduceVocab() 
 {
     int a;
@@ -616,7 +621,8 @@ void AllocateNet()
         exit(1);
     }
 }
-
+//randomization to apply the weight for ann and backpropagation
+//randomization for other important parts
 void RandomizeWeights()
 {
     long long a;
@@ -769,7 +775,7 @@ void UpdateProgressMonitor(long long word_count, long long *last_word_count)
         }
     }
 }
-
+//removes a,the,is these kinds of words
 int SubsampleWord(long long word, unsigned long long *next_random)
 {
     float prob_ratio;
@@ -793,13 +799,12 @@ int SubsampleWord(long long word, unsigned long long *next_random)
     }
     return 0; // Keep this word
 }
-
+//training function starter
 void PerformTrainingForPair(long long input_word, long long target_word, int label, float *neu1)
 {
-    // Updated to call the new 'ann' function
     ann(input_word, target_word, label, alpha, neu1);
 }
-
+//negative sampling
 long long GetNegativeSample(unsigned long long *next_random)
 {
     long long target;
@@ -816,7 +821,7 @@ long long GetNegativeSample(unsigned long long *next_random)
     
     return target;
 }
-
+//decideing the context window in skipgram
 void TrainContextWindow(long long sentence_pos, long long sent_len, long long *sen, unsigned long long *next_random, float *neu1)
 {
     long long word;
@@ -918,12 +923,15 @@ void SaveVectorFile()
     long long a;
     long long b;
     
-    printf("\nTraining complete. Saving vectors to vectors.txt...\n");
+    printf("\n");
+    printf("Training complete. Saving vectors to vectors.txt...");
+    printf("\n");
     
     fo = fopen("vectors.txt", "wb");
     if (fo == NULL) 
     {
-        printf("Error creating vectors.txt\n");
+        printf("Error creating vectors.txt");
+    printf("\n");
         exit(1);
     }
     
@@ -969,7 +977,9 @@ void TrainModel()
     fi = fopen("input.txt", "rb");
     if (fi == NULL) 
     {
-        printf("Error opening input.txt for training\n");
+        printf("Error opening input.txt for training");
+        
+    printf("\n");
         exit(1);
     }
     
@@ -1030,7 +1040,7 @@ void TrainModel()
                 break;
             }
         }
-        
+        //For one center word, it finds nearby context words and trains
         TrainContextWindow(sentence_position, sentence_length, sen, &next_random, neu1);
         
         sentence_position++;
@@ -1152,18 +1162,13 @@ void LoadModel()
     }
     fclose(f);
 }
-
-// -----------------------------------------------------------
-// NEW: SEPARATE COSINE SIMILARITY FUNCTION (FEATURE 1 REQUEST)
-// -----------------------------------------------------------
+//calculates the cosine similarity
 float CalculateCosineSimilarity(long long word1_idx, long long word2_idx)
 {
     float dist;
     float dot_prod;
     long long a;
     
-    // Vectors are already normalized (length=1) in LoadModel
-    // So Cosine Similarity = Dot Product
     dist = 0;
     a = 0;
     while (a < layer1_size) 
@@ -1174,7 +1179,7 @@ float CalculateCosineSimilarity(long long word1_idx, long long word2_idx)
     }
     return dist;
 }
-
+//performs similarity function
 void PerformSimilarityCheck()
 {
     char st1[MAX_STRING];
@@ -1187,8 +1192,9 @@ void PerformSimilarityCheck()
     long long bi[40];
     long long current_index;
     float current_dist;
-    
-    printf("\nEnter word: ");
+      printf("\n");
+    printf("Enter word: ");
+    printf("\n");
     scanf("%s", st1);
     
     b = SearchVocab(st1);
@@ -1220,7 +1226,6 @@ void PerformSimilarityCheck()
             continue;
         }
         
-        // Reusing the Separate Calculation Function
         dist = CalculateCosineSimilarity(b, c);
         
         a = 0;
@@ -1253,16 +1258,13 @@ void PerformSimilarityCheck()
         a++;
     }
 }
-
-// -----------------------------------------------------------
-// NEW: FLEXIBLE WORD ARITHMETIC PARSER (FEATURE 2 REQUEST)
-// -----------------------------------------------------------
+//word arithmatic(king - man +woman =queen)
 void PerformFlexibleArithmetic()
 {
-    char input_line[MAX_STRING * 10]; // Buffer for whole line
+    char input_line[MAX_STRING * 10]; 
     char *token;
-    char words[10][MAX_STRING]; // Store up to 10 words
-    char ops[10];               // Store operators (+ or -)
+    char words[10][MAX_STRING]; 
+    char ops[10];               
     int word_count = 0;
     int op_count = 0;
     long long indices[10];
@@ -1271,22 +1273,18 @@ void PerformFlexibleArithmetic()
     float dist;
     float bestd[40];
     long long bi[40];
-    long long a, c, d, current_index;
+    long long a, c, d;
     int i;
-
-    printf("\nEnter Equation (e.g., king - man + woman): ");
+      printf("\n");
+    printf("Enter Equation (e.g., king - man + woman): ");
     
-    // Clear buffer from previous input
     int ch;
     while ((ch = getchar()) != '\n' && ch != EOF); 
     
-    // Read whole line
     if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
     
-    // Remove newline char
     input_line[strcspn(input_line, "\n")] = 0;
 
-    // Parse logic
     token = strtok(input_line, " ");
     while (token != NULL) 
     {
@@ -1301,14 +1299,12 @@ void PerformFlexibleArithmetic()
         token = strtok(NULL, " ");
     }
 
-    // Validate inputs
     if (word_count < 2) 
     {
         printf("Error: Need at least 2 words.\n");
         return;
     }
 
-    // Lookup words
     for (i = 0; i < word_count; i++) 
     {
         indices[i] = SearchVocab(words[i]);
@@ -1319,16 +1315,14 @@ void PerformFlexibleArithmetic()
         }
     }
 
-    // Initialize Vector with First Word
     for (a = 0; a < layer1_size; a++) 
     {
         vec[a] = syn0[a + indices[0] * layer1_size];
     }
 
-    // Apply Operations
     for (i = 1; i < word_count; i++) 
     {
-        char op = (i-1 < op_count) ? ops[i-1] : '+'; // Default to + if op missing
+        char op = (i-1 < op_count) ? ops[i-1] : '+'; 
         
         for (a = 0; a < layer1_size; a++) 
         {
@@ -1343,13 +1337,11 @@ void PerformFlexibleArithmetic()
         }
     }
 
-    // Normalize Result
     len = 0;
     for (a = 0; a < layer1_size; a++) len += vec[a] * vec[a];
     len = sqrt(len);
     for (a = 0; a < layer1_size; a++) vec[a] /= len;
 
-    // Search Neighbors
     for (a = 0; a < 20; a++) { bestd[a] = 0; bi[a] = 0; }
 
     printf("\n                                              Word       Cosine Distance\n");
@@ -1357,7 +1349,6 @@ void PerformFlexibleArithmetic()
 
     for (c = 0; c < vocab_size; c++) 
     {
-        // Skip input words
         int skip = 0;
         for(i=0; i<word_count; i++) if (c == indices[i]) skip = 1;
         if (skip) continue;
@@ -1386,10 +1377,7 @@ void PerformFlexibleArithmetic()
         printf("%50s\t\t%f\n", vocab[bi[a]].word, bestd[a]);
     }
 }
-
-// -----------------------------------------------------------
-// NEW: PAIR SIMILARITY CHECK (FEATURE 3 REQUEST)
-// -----------------------------------------------------------
+//two words and calculate their similarity
 void PerformPairSimilarity()
 {
     char st1[MAX_STRING];
@@ -1397,8 +1385,8 @@ void PerformPairSimilarity()
     long long w1;
     long long w2;
     float dist;
-    
-    printf("\nEnter two words to check similarity (e.g. mango banana)\n");
+      printf("\n");
+    printf("Enter two words to check similarity (e.g. mango banana)\n");
     printf("Input: ");
     scanf("%s %s", st1, st2);
     
@@ -1416,15 +1404,11 @@ void PerformPairSimilarity()
         return;
     }
     
-    // Call separate math function
     dist = CalculateCosineSimilarity(w1, w2);
     
     printf("\nCosine Similarity (%s, %s) = %f\n", st1, st2, dist);
 }
-
-// -----------------------------------------------------------
-// NEW: ODD ONE OUT (FEATURE 4 REQUEST)
-// -----------------------------------------------------------
+//remove sthe odd word from the input words
 void PerformOddOneOut()
 {
     char input_line[MAX_STRING * 10];
@@ -1436,11 +1420,11 @@ void PerformOddOneOut()
     int i;
     long long a;
     float len;
-    float min_dist = 100.0; // Start high
+    float min_dist = 100.0; 
     int odd_one_index = -1;
     float dist;
-
-    printf("\nEnter list of words (e.g., apple banana car): ");
+      printf("\n");
+    printf("Enter list of words (e.g., apple banana car): ");
     
     int ch;
     while ((ch = getchar()) != '\n' && ch != EOF); 
@@ -1461,7 +1445,6 @@ void PerformOddOneOut()
         return;
     }
 
-    // 1. Convert words to indices
     for (i = 0; i < word_count; i++) 
     {
         indices[i] = SearchVocab(words[i]);
@@ -1472,13 +1455,11 @@ void PerformOddOneOut()
         }
     }
 
-    // 2. Initialize Average Vector
     for (a = 0; a < layer1_size; a++) 
     {
         avg_vec[a] = 0;
     }
 
-    // 3. Sum vectors
     for (i = 0; i < word_count; i++) 
     {
         for (a = 0; a < layer1_size; a++) 
@@ -1486,37 +1467,40 @@ void PerformOddOneOut()
             avg_vec[a] += syn0[a + indices[i] * layer1_size];
         }
     }
-
-    // 4. Normalize Average Vector
+    
     len = 0;
-    for (a = 0; a < layer1_size; a++) len += avg_vec[a] * avg_vec[a];
+    for (a = 0; a < layer1_size; a++) 
+    {
+        len += avg_vec[a] * avg_vec[a];
+    }
     len = sqrt(len);
-    for (a = 0; a < layer1_size; a++) avg_vec[a] /= len;
-
-    // 5. Find word furthest from average (LOWEST Cosine Similarity)
+    
+    for (a = 0; a < layer1_size; a++) 
+    {
+        avg_vec[a] /= len;
+    }
+    
     for (i = 0; i < word_count; i++) 
     {
         dist = 0;
         for (a = 0; a < layer1_size; a++) 
         {
-            // Dot product of (Word Vector) * (Average Vector)
-            dist += syn0[a + indices[i] * layer1_size] * avg_vec[a];
+            dist += avg_vec[a] * syn0[a + indices[i] * layer1_size];
         }
         
-        // Debug print to see scores
-        printf("Score for '%s': %f\n", words[i], dist);
-
         if (dist < min_dist) 
         {
             min_dist = dist;
             odd_one_index = i;
         }
     }
-
-    printf("\nOdd One Out: %s (Furthest distance)\n", words[odd_one_index]);
+    
+    if (odd_one_index != -1) 
+    {
+        printf("\nOdd one out: %s\n", words[odd_one_index]);
+    }
 }
-//loading the vectors of every part of the sentence
-
+//gets the vector of every token of the sentence
 void GetSentenceVector(char *sentence, float *vector)
 {
     char temp[MAX_STRING * 20];
@@ -1528,7 +1512,6 @@ void GetSentenceVector(char *sentence, float *vector)
 
     strcpy(temp, sentence);
     
-    // Initialize vector to 0
     for (a = 0; a < layer1_size; a++) vector[a] = 0;
 
     token = strtok(temp, " \n");
@@ -1546,17 +1529,16 @@ void GetSentenceVector(char *sentence, float *vector)
         token = strtok(NULL, " \n");
     }
 
-    // Normalize (Average then Unit Length)
     if (word_count > 0) 
     {
         len = 0;
         for (a = 0; a < layer1_size; a++) 
         {
-            vector[a] /= word_count; // Mathematical Average
+            vector[a] /= word_count; 
             len += vector[a] * vector[a];
         }
         len = sqrt(len);
-        for (a = 0; a < layer1_size; a++) vector[a] /= len; // Convert to Unit Vector
+        for (a = 0; a < layer1_size; a++) vector[a] /= len; 
     }
 }
 
@@ -1564,7 +1546,7 @@ void PerformSentenceSimilarity()
 {
     char sent1[MAX_STRING * 20];
     char sent2[MAX_STRING * 20];
-    float vec1[3000]; // Assuming vector size is safely <= 3000
+    float vec1[3000]; 
     float vec2[3000];
     float dist;
     long long a;
@@ -1572,9 +1554,11 @@ void PerformSentenceSimilarity()
     int ch;
     while ((ch = getchar()) != '\n' && ch != EOF);
 
-    printf("\nEnter Sentence A: ");
+    printf("Enter Sentence A: ");
     if (fgets(sent1, sizeof(sent1), stdin) == NULL) return;
     sent1[strcspn(sent1, "\n")] = 0;
+      printf("\n");
+      printf("\n");
 
     printf("Enter Sentence B: ");
     if (fgets(sent2, sizeof(sent2), stdin) == NULL) return;
@@ -1583,7 +1567,6 @@ void PerformSentenceSimilarity()
     GetSentenceVector(sent1, vec1);
     GetSentenceVector(sent2, vec2);
 
-    // Calculate Cosine Similarity (Dot Product of the two normalized Sentence Vectors)
     dist = 0;
     for (a = 0; a < layer1_size; a++) 
     {
@@ -1593,128 +1576,21 @@ void PerformSentenceSimilarity()
     printf("\nSemantic Similarity Score: %f\n", dist);
 }
 
+// clustering into k groups 
 void PerformWordClustering()
 {
     char input_line[MAX_STRING * 20];
     char words[50][MAX_STRING];
-    long long indices[50];// -----------------------------------------------------------
-    // NEW: K-MEANS CLUSTERING (REPLACING OLD FEATURE 6)
-    // -----------------------------------------------------------
-    void PerformWordClustering()
-    {
-        char input_line[MAX_STRING * 20];
-        char words[50][MAX_STRING];
-        long long indices[50];
-        int cluster_assignment[50];
-        float centroids[10][300]; // Max 10 clusters, 300 dimensions
-        int word_count = 0, k_clusters = 0;
-        int i, j, c, iter;
-    
-        printf("\n--- K-Means Word Clustering ---");
-        printf("\nHow many groups (K) do you want to create? ");
-        scanf("%d", &k_clusters);
-        
-        if (k_clusters < 2 || k_clusters > 10) {
-            printf("Please choose K between 2 and 10.\n");
-            return;
-        }
-    
-        // Clear buffer and get words
-        int ch; while ((ch = getchar()) != '\n' && ch != EOF);
-        printf("Enter words (e.g., car banana tiger mango lion bus): ");
-        if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
-        input_line[strcspn(input_line, "\n")] = 0;
-    
-        // Tokenize words and find indices
-        char *token = strtok(input_line, " ");
-        while (token != NULL && word_count < 50) {
-            long long idx = SearchVocab(token);
-            if (idx != -1) {
-                strcpy(words[word_count], token);
-                indices[word_count] = idx;
-                word_count++;
-            } else {
-                printf("Skipping '%s' (not in vocab).\n", token);
-            }
-            token = strtok(NULL, " ");
-        }
-    
-        if (word_count < k_clusters) {
-            printf("Error: Not enough valid words for %d clusters.\n", k_clusters);
-            return;
-        }
-    
-        // 1. INITIALIZATION: Pick first K words as starting centroids
-        for (i = 0; i < k_clusters; i++) {
-            for (c = 0; c < layer1_size; c++) {
-                centroids[i][c] = syn0[c + indices[i] * layer1_size];
-            }
-        }
-    
-        // 2. K-MEANS ITERATIONS
-        for (iter = 0; iter < 10; iter++) {
-            // A. Assignment Step
-            for (i = 0; i < word_count; i++) {
-                float max_sim = -2.0;
-                int best_cluster = 0;
-                for (j = 0; j < k_clusters; j++) {
-                    float sim = 0;
-                    // Cosine similarity between word and centroid
-                    for (c = 0; c < layer1_size; c++) {
-                        sim += syn0[c + indices[i] * layer1_size] * centroids[j][c];
-                    }
-                    if (sim > max_sim) {
-                        max_sim = sim;
-                        best_cluster = j;
-                    }
-                }
-                cluster_assignment[i] = best_cluster;
-            }
-    
-            // B. Update Step: Recalculate Centroids
-            for (j = 0; j < k_clusters; j++) {
-                float new_vec[300] = {0};
-                int count = 0;
-                for (i = 0; i < word_count; i++) {
-                    if (cluster_assignment[i] == j) {
-                        for (c = 0; c < layer1_size; c++) new_vec[c] += syn0[c + indices[i] * layer1_size];
-                        count++;
-                    }
-                }
-                if (count > 0) {
-                    float len = 0;
-                    for (c = 0; c < layer1_size; c++) {
-                        new_vec[c] /= count;
-                        len += new_vec[c] * new_vec[c];
-                    }
-                    len = sqrt(len);
-                    for (c = 0; c < layer1_size; c++) centroids[j][c] = new_vec[c] / len;
-                }
-            }
-        }
-    
-        // 3. DISPLAY RESULTS
-        printf("\n--- Clustering Results ---\n");
-        for (j = 0; j < k_clusters; j++) {
-            printf("Group %d: ", j + 1);
-            int found = 0;
-            for (i = 0; i < word_count; i++) {
-                if (cluster_assignment[i] == j) {
-                    printf("%s ", words[i]);
-                    found = 1;
-                }
-            }
-            if (!found) printf("[Empty]");
-            printf("\n");
-        }
-    }
+    long long indices[50];
     int cluster_assignment[50];
     float centroids[10][300]; // Max 10 clusters, 300 dimensions
     int word_count = 0, k_clusters = 0;
     int i, j, c, iter;
 
     printf("\n--- K-Means Word Clustering ---");
-    printf("\nHow many groups (K) do you want to create? ");
+    printf("maximum 10 clustering is possible");
+      printf("\n");
+    printf("How many groups (K) do you want to create? ");
     scanf("%d", &k_clusters);
     
     if (k_clusters < 2 || k_clusters > 10) {
@@ -1725,18 +1601,22 @@ void PerformWordClustering()
     // Clear buffer and get words
     int ch; while ((ch = getchar()) != '\n' && ch != EOF);
     printf("Enter words (e.g., car banana tiger mango lion bus): ");
-    if (fgets(input_line, sizeof(input_line), stdin) == NULL) return;
+    if (fgets(input_line, sizeof(input_line), stdin) == NULL) 
+        return;
     input_line[strcspn(input_line, "\n")] = 0;
 
     // Tokenize words and find indices
     char *token = strtok(input_line, " ");
     while (token != NULL && word_count < 50) {
         long long idx = SearchVocab(token);
-        if (idx != -1) {
+        if (idx != -1) 
+        {
             strcpy(words[word_count], token);
             indices[word_count] = idx;
             word_count++;
-        } else {
+        } 
+        else 
+        {
             printf("Skipping '%s' (not in vocab).\n", token);
         }
         token = strtok(NULL, " ");
@@ -1747,26 +1627,74 @@ void PerformWordClustering()
         return;
     }
 
-    // 1. INITIALIZATION: Pick first K words as starting centroids
-    for (i = 0; i < k_clusters; i++) {
-        for (c = 0; c < layer1_size; c++) {
-            centroids[i][c] = syn0[c + indices[i] * layer1_size];
+    // initialization
+    int c_idx[10];
+    c_idx[0] = 0;
+    for (c = 0; c < layer1_size; c++) 
+    {
+        centroids[0][c] = syn0[c + indices[0] * layer1_size];
+    }
+
+    for (j = 1; j < k_clusters; j++) 
+    {
+        float min_max_sim = 2.0; 
+        int best_candidate = -1;
+
+        for (i = 0; i < word_count; i++) 
+        {
+            int already_chosen = 0;
+            for (int prev = 0; prev < j; prev++) 
+            {
+                if (c_idx[prev] == i) already_chosen = 1;
+            }
+            if (already_chosen)
+                continue;
+
+            float max_sim_to_centroids = -2.0;
+            for (int prev = 0; prev < j; prev++) 
+            {
+                float sim = 0;
+                for (c = 0; c < layer1_size; c++)
+                    {
+                    sim += syn0[c + indices[i] * layer1_size] * centroids[prev][c];
+                }
+                if (sim > max_sim_to_centroids) 
+                {
+                    max_sim_to_centroids = sim;
+                }
+            }
+
+            if (max_sim_to_centroids < min_max_sim) 
+            {
+                min_max_sim = max_sim_to_centroids;
+                best_candidate = i;
+            }
+        }
+        c_idx[j] = best_candidate;
+        for (c = 0; c < layer1_size; c++) 
+        {
+            centroids[j][c] = syn0[c + indices[best_candidate] * layer1_size];
         }
     }
 
-    // 2. K-MEANS ITERATIONS
-    for (iter = 0; iter < 10; iter++) {
-        // A. Assignment Step
-        for (i = 0; i < word_count; i++) {
+    // k means iteration
+    for (iter = 0; iter < 10; iter++)
+        {
+        // assignment step
+        for (i = 0; i < word_count; i++) 
+        {
             float max_sim = -2.0;
             int best_cluster = 0;
-            for (j = 0; j < k_clusters; j++) {
+            for (j = 0; j < k_clusters; j++) 
+            {
                 float sim = 0;
                 // Cosine similarity between word and centroid
-                for (c = 0; c < layer1_size; c++) {
+                for (c = 0; c < layer1_size; c++) 
+                {
                     sim += syn0[c + indices[i] * layer1_size] * centroids[j][c];
                 }
-                if (sim > max_sim) {
+                if (sim > max_sim) 
+                {
                     max_sim = sim;
                     best_cluster = j;
                 }
@@ -1774,19 +1702,24 @@ void PerformWordClustering()
             cluster_assignment[i] = best_cluster;
         }
 
-        // B. Update Step: Recalculate Centroids
-        for (j = 0; j < k_clusters; j++) {
+        //update steps
+        for (j = 0; j < k_clusters; j++) 
+        {
             float new_vec[300] = {0};
             int count = 0;
-            for (i = 0; i < word_count; i++) {
-                if (cluster_assignment[i] == j) {
+            for (i = 0; i < word_count; i++) 
+            {
+                if (cluster_assignment[i] == j) 
+                {
                     for (c = 0; c < layer1_size; c++) new_vec[c] += syn0[c + indices[i] * layer1_size];
                     count++;
                 }
             }
-            if (count > 0) {
+            if (count > 0) 
+            {
                 float len = 0;
-                for (c = 0; c < layer1_size; c++) {
+                for (c = 0; c < layer1_size; c++) 
+                {
                     new_vec[c] /= count;
                     len += new_vec[c] * new_vec[c];
                 }
@@ -1796,30 +1729,28 @@ void PerformWordClustering()
         }
     }
 
-    // 3. DISPLAY RESULTS
-printf("\n");
-    printf("--- Clustering Results ---");
-printf("\n");
-    for (j = 0; j < k_clusters; j++) {
+    //display result
+      printf("\n");
+    printf("-- Clustering Results ---");
+  printf("\n");
+    for (j = 0; j < k_clusters; j++)
+        {
         printf("Group %d: ", j + 1);
         int found = 0;
-        for (i = 0; i < word_count; i++) {
-            if (cluster_assignment[i] == j) {
+        for (i = 0; i < word_count; i++) 
+        {
+            if (cluster_assignment[i] == j) 
+            {
                 printf("%s ", words[i]);
                 found = 1;
             }
         }
         if (!found)
-        {
-             printf("[Empty]");
+            printf("[Empty]");
         printf("\n");
     }
 }
-}
-
-
-
-//my main interface on terminal
+//an iterface that will appaea on the screen of linux
 void InteractiveLoop() 
 {
     int choice;
@@ -1828,30 +1759,29 @@ void InteractiveLoop()
     {
         printf("\n");
         printf("==============================================\n");
-        printf("\n");
-        printf("Choose Option:\n");
-        printf("\n");
+        printf("Choose Option:");
+          printf("\n");
+          printf("\n");
         printf("1. Similar Words (Input: 'good')");
-        printf("\n");
-        printf("\n");
+          printf("\n");
+          printf("\n");
         printf("2. Flexible Word Arithmetic (e.g. king - man + woman)");
-        printf("\n");
-        printf("\n");
-        printf("3. Pair Similarity (Input: 'mango banana')");
-        printf("\n");
-        printf("\n");
+          printf("\n");
+          printf("\n");
+        printf("3. Pair Similarity (Input: 'mango banana'));
+              printf("\n");
+          printf("\n");
         printf("4. Odd One Out (Input: 'apple car banana')");
-        printf("\n");
-        printf("\n");
+          printf("\n");
+          printf("\n");
         printf("5. Sentence Similarity (Input: 2 sentences)");
-        printf("\n");
-        printf("\n");
-        printf("6. Word Clustering :");
-        printf("\n");
-        printf("\n");
+          printf("\n");
+          printf("\n");
+        printf("6. Word Clustering (Input: 2 centers + word list)");
+          printf("\n");
+          printf("\n");
         printf("7. Exit");
-        printf("\n");
-        printf("\n");
+          printf("\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
@@ -1877,14 +1807,14 @@ void InteractiveLoop()
         {
             PerformOddOneOut();
         }
-        else if (choice == 5) 
+        else if (choice == 5)
         {
             PerformSentenceSimilarity();
-               }
-                      else if (choice == 6) {
-                        PerformWordClustering();
-                      }
-    
+        }
+        else if (choice == 6)
+        {
+            PerformWordClustering();
+        }
     }
 }
 
@@ -1907,8 +1837,7 @@ void AllocateInitialMemory()
     
     if (vocab_hash == NULL) 
     {
-        printf("Initial hash allocation failed");
-        printf("\n");
+        printf("Initial hash allocation failed\n");
         exit(1);
     }
 }
@@ -1919,18 +1848,23 @@ int main()
     
     printf("========================================");
     printf("\n");
+    
+    printf("\n");
     printf("     Word2Vec C Engine (Ultimate Ver)   ");
+    
     printf("\n");
-    printf("========================================");
+    printf("========================================\n");
+    printf("1. TRAIN New Model );
     printf("\n");
-    printf("1. TRAIN New Model ");
+    
     printf("\n");
     printf("2. PLAY with Existing Model (vectors.txt)");
+    printf("\n");
     printf("\n");
     printf("Select Mode: ");
     
     scanf("%d", &mode);
-
+//calling the training function 
     if (mode == 1) 
     {
         AllocateInitialMemory();
@@ -1940,7 +1874,7 @@ int main()
         InitUnigramTable();
         TrainModel();
     } 
-    
+    //calling the model to deal with the user 
     if (mode == 2) 
     {
         LoadModel();
