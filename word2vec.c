@@ -1750,6 +1750,222 @@ void PerformWordClustering()
         printf("\n");
     }
 }
+//finds the semantic sentence from the document 
+void PerformSemanticSearch() 
+{
+    char filename[MAX_STRING];
+    char query[MAX_STRING * 20];
+    char line[MAX_STRING * 100]; 
+    char best_sentence[MAX_STRING * 100];
+    float query_vec[3000];
+    float sentence_vec[3000];
+    float best_score = -2.0;
+    float current_score;
+    long long a;
+    FILE *f;
+
+     printf("\n");  
+    printf("--- Semantic Search Engine ---\n");
+    
+    
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF);
+    
+    
+    printf("Enter the name of your text file (e.g., document.txt): ");
+    if (fgets(filename, sizeof(filename), stdin) == NULL)
+     return;
+    filename[strcspn(filename, "\n")] = 0; 
+
+    
+    f = fopen(filename, "r");
+    if (f == NULL) 
+    {
+        printf("Error: Could not find '%s' in the current folder.\n", filename);
+        return;
+    }
+
+    
+    printf("Enter your search query: ");
+    if (fgets(query, sizeof(query), stdin) == NULL)
+     {
+         fclose(f);
+          return;
+         }
+    query[strcspn(query, "\n")] = 0; 
+
+    
+    GetSentenceVector(query, query_vec);
+
+    
+    best_sentence[0] = '\0'; 
+    while (fgets(line, sizeof(line), f) != NULL) 
+    {
+        line[strcspn(line, "\n")] = 0;
+        if (strlen(line) < 5) 
+        continue;
+
+        // Get the vector for the current sentence
+        GetSentenceVector(line, sentence_vec);
+        
+        current_score = 0;
+        for (a = 0; a < layer1_size; a++) 
+        {
+            current_score += query_vec[a] * sentence_vec[a];
+        }
+
+        
+        if (current_score > best_score) 
+        {
+            best_score = current_score;
+            strcpy(best_sentence, line);
+        }
+    }
+    fclose(f);
+
+    // Output the results
+    if (best_score == -2.0) 
+    {
+        printf("\n");
+        printf(" No valid sentences found in the document to compare.\n");
+    } 
+    else 
+    {
+        printf("\n=> Best Match (Similarity Score: %.4f):\n", best_score);
+        printf("\"%s\"\n", best_sentence);
+    }
+}
+
+//connects words according to the context 
+void PerformConceptConnector() 
+{
+    char input_line[MAX_STRING * 10];
+    char words[10][MAX_STRING];
+    long long indices[10];
+    int word_count = 0;
+    float center_vec[3000];
+    long long a, b, c;
+    int i;
+    printf("\n");
+    printf("--- The 'Codenames' AI (Concept Connector) ---");
+    printf("\n");
+    
+    // Clear the input buffer
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF); 
+    printf("\n");
+    printf("Enter 2 to 5 words separated by spaces (e.g., web venom legs): ");
+    
+    if (fgets(input_line, sizeof(input_line), stdin) == NULL) 
+    return;
+    input_line[strcspn(input_line, "\n")] = 0;
+    
+    // Break the input line into individual words
+    char *token = strtok(input_line, " ");
+    while (token != NULL && word_count < 5) 
+    {
+        strcpy(words[word_count++], token);
+        token = strtok(NULL, " ");
+    }
+    
+    if (word_count < 2) 
+    {
+        printf("Error: Please enter at least 2 words to connect.\n");
+        return;
+    }
+    
+    //  Find the words in the vocabulary
+    int valid_words = 0;
+    for (i = 0; i < word_count; i++) 
+    {
+        indices[valid_words] = SearchVocab(words[i]);
+        if (indices[valid_words] == -1) 
+        {
+            printf("Skipping '%s' (Not found in dictionary).\n", words[i]);
+        } 
+        else 
+        {
+            valid_words++;
+        }
+    }
+    
+    if (valid_words == 0)
+     {
+        printf("\n");
+        printf("Error: None of your words were found in the dictionary.");
+        return;
+    }
+    
+    // Calculate the "Center of Mass" (Average Vector)
+    for (a = 0; a < layer1_size; a++) 
+    center_vec[a] = 0;
+    
+    for (i = 0; i < valid_words; i++) 
+    {
+        for (a = 0; a < layer1_size; a++)
+         {
+            center_vec[a] += syn0[a + indices[i] * layer1_size];
+        }
+    }
+    
+    // Normalize the center point mathematically
+    float len = 0;
+    for (a = 0; a < layer1_size; a++) 
+    len += center_vec[a] * center_vec[a];
+    len = sqrt(len);
+    for (a = 0; a < layer1_size; a++)
+     center_vec[a] /= len;
+    
+    //  Scan the dictionary for the closest matches
+    float best_scores[5] = {-2.0, -2.0, -2.0, -2.0, -2.0};
+    int best_indices[5] = {-1, -1, -1, -1, -1};
+    
+    for (b = 0; b < vocab_size; b++) 
+    {
+        
+        int is_input = 0;
+        for (i = 0; i < valid_words; i++) 
+        {
+            if (b == indices[i]) is_input = 1;
+        }
+        if (is_input)
+         continue;
+        
+        
+        float dist = 0;
+        for (a = 0; a < layer1_size; a++)
+         {
+            dist += center_vec[a] * syn0[a + b * layer1_size];
+        }
+        
+        // Keep track of the top 5 closest words
+        for (i = 0; i < 5; i++)
+         {
+            if (dist > best_scores[i])
+             {
+                for (c = 4; c > i; c--) 
+                {
+                    best_scores[c] = best_scores[c-1];
+                    best_indices[c] = best_indices[c-1];
+                }
+                best_scores[i] = dist;
+                best_indices[i] = b;
+                break;
+            }
+        }
+    }
+    
+    // 4. Print the result
+    printf("\n=> Top 'Codenames' Clues for your words:");
+    printf("\n");
+    for (i = 0; i < 5; i++) 
+    {
+        if (best_indices[i] != -1)
+         {
+            printf(" %d. %s (Similarity Score: %.4f)\n", i+1, vocab[best_indices[i]].word, best_scores[i]);
+        }
+    }
+}
 //an iterface that will appaea on the screen of linux
 void InteractiveLoop() 
 {
@@ -1780,15 +1996,28 @@ void InteractiveLoop()
         printf("6. Word Clustering (Input: 2 centers + word list)");
           printf("\n");
           printf("\n");
-        printf("7. Exit");
+           printf("7. Semantic Document Search (Requires 'document.txt')");
+        printf("\n");
+        printf("\n");
+        
+        printf("8. 'Codenames' Concept Connector (Input: 2-5 words)");
+        printf("\n");
+        printf("\n);
+          
+        printf("9. Exit");
           printf("\n");
         printf("Enter choice: ");
         
         scanf("%d", &choice);
         
-        if (choice == 7) 
+        if (choice == 9) 
         {
             break;
+        }
+        if (choice>9)
+        {
+            printf("there is no feature");
+            printf("\n");
         }
         
         if (choice == 1) 
@@ -1815,6 +2044,14 @@ void InteractiveLoop()
         {
             PerformWordClustering();
         }
+          else if (choice == 7) 
+        {
+            PerformSemanticSearch();
+        }
+        
+        else if (choice == 8) 
+        {
+            PerformConceptConnector();
     }
 }
 
