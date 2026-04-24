@@ -1984,7 +1984,7 @@ void InteractiveLoop()
         printf("2. Flexible Word Arithmetic (e.g. king - man + woman)");
           printf("\n");
           printf("\n");
-        printf("3. Pair Similarity (Input: 'mango banana'));
+        printf("3. Pair Similarity (Input: 'mango banana')");
               printf("\n");
           printf("\n");
         printf("4. Odd One Out (Input: 'apple car banana')");
@@ -2074,7 +2074,8 @@ void AllocateInitialMemory()
     
     if (vocab_hash == NULL) 
     {
-        printf("Initial hash allocation failed\n");
+        printf("Initial hash allocation failed");
+        printf("\n");
         exit(1);
     }
 }
@@ -2091,7 +2092,7 @@ int main()
     
     printf("\n");
     printf("========================================\n");
-    printf("1. TRAIN New Model );
+    printf("1. TRAIN New Model");
     printf("\n");
     
     printf("\n");
