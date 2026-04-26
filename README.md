@@ -17,7 +17,9 @@ Represent vocabulary words as dense vectors
 Capture semantic and contextual relationships between words
 Build a lightweight NLP tool using pure C
 ⚙️ Features
+
 1.  Word Similarity
+
 
 Computes similarity between two words using cosine similarity.
 
@@ -25,7 +27,9 @@ Examples:
 
 similarity(road, bus) ≈ 0.36
 similarity(good, great) ≈ 0.89
+
 2. Vector Arithmetic (Word Analogy)
+   
 
 Performs mathematical operations on word vectors to capture relationships.
 
@@ -33,7 +37,9 @@ Examples:
 
 king − man + woman ≈ queen
 running − run + walk ≈ walking
+
 3.  Similar Words Retrieval
+
 
 Finds the most contextually similar words to a given input word.
 
@@ -41,7 +47,9 @@ Examples:
 
 good → (great, best, excellent)
 king → (monarch, prince, ruler)
+
 4.  Sentence Similarity
+
 
 Measures similarity between sentences by averaging word vectors.
 
@@ -50,13 +58,16 @@ Examples:
 "dog is a loyal animal"
 "cat is a domestic animal"
 → similarity ≈ 0.7
+
 5. Add One Out Detection
+
 
 Identifies the word that does not belong in a group.
 
 Example:
 
 (apple, banana, mango, car) → car
+
 6. Word Clustering:
 
 Groups words into K clusters based on vector similarity (e.g., K-means).
@@ -66,7 +77,9 @@ Examples:
 K = 2 → {bus}, {apple, mango}
 K = 3 → {grape}, {bus, car}, {lion}
 
-7. 🔎 Semantic Search
+
+7.  Semantic Search
+
 
 Searches the most contextually relevant sentence from the .txt file based on the user input.
 
