@@ -112,6 +112,9 @@ Output:royalty / king / monarch
 
 
 PROJECT MATERIAL:
+
+
+
 Language: C
 
 Topics: Natural Language Processing, Word2Vec, File Handling, Dynamic Memory Management
@@ -119,6 +122,9 @@ Topics: Natural Language Processing, Word2Vec, File Handling, Dynamic Memory Man
 Technology: GitHub
 
 How to run:
+
+
+
 git clone https://github.com/irfan1232005/word2vec.c.git
 
 
