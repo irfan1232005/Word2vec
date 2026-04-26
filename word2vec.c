@@ -2054,6 +2054,7 @@ void InteractiveLoop()
             PerformConceptConnector();
     }
 }
+}
 
 void AllocateInitialMemory()
 {
@@ -2065,7 +2066,8 @@ void AllocateInitialMemory()
     
     if (vocab == NULL) 
     {
-        printf("Initial vocab allocation failed\n");
+        printf("Initial vocab allocation failed");
+        printf("\n");
         exit(1);
     }
     
@@ -2088,7 +2090,7 @@ int main()
     printf("\n");
     
     printf("\n");
-    printf("     Word2Vec C Engine (Ultimate Ver)   ");
+    printf("     Word2Vec C Engine (Ultimate Version)   ");
     
     printf("\n");
     printf("========================================\n");
