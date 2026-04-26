@@ -105,11 +105,18 @@ Technology: GitHub
 
 How to run:
 git clone https://github.com/your-username/word2vec.c.git
+
+
 cd word2vec.c
+
 ls
+
 word2vec.c
+
 vectors.txt
+
 gcc word2vec.c -o word2vec -lm
+
 ./word2vec
 
 
