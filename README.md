@@ -143,3 +143,6 @@ gcc word2vec.c -o word2vec -lm
 
 Dataset source:
 https://www.kaggle.com/datasets/sugataghosh/google-word2vec
+
+
+https://code.google.com/archive/p/word2vec/
