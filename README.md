@@ -104,7 +104,7 @@ Topics: Natural Language Processing, Word2Vec, File Handling, Dynamic Memory Man
 Technology: GitHub
 
 How to run:
-git clone https://github.com/your-username/word2vec.c.git
+git clone https://github.com/irfan1232005/word2vec.c.git
 
 
 cd word2vec.c
