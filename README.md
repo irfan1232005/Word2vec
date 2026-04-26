@@ -16,6 +16,8 @@ Learn and implement word embedding techniques from scratch
 Represent vocabulary words as dense vectors
 Capture semantic and contextual relationships between words
 Build a lightweight NLP tool using pure C
+
+
 ⚙️ Features
 
 1.  Word Similarity
